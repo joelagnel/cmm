@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>supply-chain_dag</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="supply-chain_dag_files/libs/clipboard/clipboard.min.js"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/popper.min.js"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="supply-chain_dag_files/libs/quarto-html/anchor.min.js"></script>
+<link href="supply-chain_dag_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="supply-chain_dag_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="supply-chain_dag_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="supply-chain_dag_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="supply-chain_dag_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="reasoning-dag-supply-chain" class="level1">
+<h1>Reasoning DAG — <code>supply-chain</code></h1>
+<p><em>Generated: 2026-03-13 03:02 UTC</em></p>
+<hr>
+<section id="legend" class="level2">
+<h2 class="anchored" data-anchor-id="legend">Legend</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Icon</th>
+<th>Node Type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>🔵</td>
+<td><strong>Hypothesis</strong></td>
+</tr>
+<tr class="even">
+<td>🔍</td>
+<td><strong>Investigation</strong></td>
+</tr>
+<tr class="odd">
+<td>✨</td>
+<td><strong>Discovery</strong></td>
+</tr>
+<tr class="even">
+<td>🔄</td>
+<td><strong>Pivot</strong></td>
+</tr>
+<tr class="odd">
+<td>✅</td>
+<td><strong>Solution</strong></td>
+</tr>
+<tr class="even">
+<td>❌</td>
+<td><strong>Dead End</strong></td>
+</tr>
+<tr class="odd">
+<td>📖</td>
+<td><strong>Context Load</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Total nodes:</strong> 54</li>
+<li><strong>Pivot nodes:</strong> 4</li>
+<li><strong>Sessions:</strong> 1</li>
+</ul>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Node Type</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>✅ Solution</td>
+<td>33</td>
+</tr>
+<tr class="even">
+<td>📖 Context Load</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<td>🔄 Pivot</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>🔍 Investigation</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td>❌ Dead End</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="pivot-points" class="level2">
+<h2 class="anchored" data-anchor-id="pivot-points">⚡ Pivot Points</h2>
+<p>These are the key moments where the agent changed direction.</p>
+<section id="pivot-1-hnode-009" class="level3">
+<h3 class="anchored" data-anchor-id="pivot-1-hnode-009">Pivot 1 — <code>hnode-009</code></h3>
+<p><em>Session: e0925b7a-fe70-4c9c-8a14-0cd742f752b5</em></p>
+<blockquote class="blockquote">
+<hr>
+</blockquote>
+<p><strong>40/40 tests passing.</strong> Here’s what was built:</p>
+</section>
+</section>
+<section id="what-was-created" class="level2">
+<h2 class="anchored" data-anchor-id="what-was-created">What was created</h2>
+<pre><code>backend/
+├── core/           config.py, database.py (lazy engine), security.py
+├── models/         Organization, User, Sh
+
+
+### Pivot 2 — `node-022`
+*Session: e0925b7a-fe70-4c9c-8a14-0cd742f752b5*
+
+&gt; The agent attempts to install dependencies and run tests but fails because pip and python commands are not found in the environment. This blocks the immediate approach of verifying the exception engine implementation.
+
+
+### Pivot 3 — `node-024`
+*Session: e0925b7a-fe70-4c9c-8a14-0cd742f752b5*
+
+&gt; The agent encounters a system Python installation restriction preventing direct pip installation, so it pivots to creating a virtual environment to properly install dependencies and run tests.
+
+
+### Pivot 4 — `node-027`
+*Session: e0925b7a-fe70-4c9c-8a14-0cd742f752b5*
+
+&gt; The agent identifies that the database engine is being created at module import time (causing test collection failures) and explicitly changes approach to use lazy initialization via factory functions.
+
+
+---
+
+## Nodes
+
+### Session: `e0925b7a-fe70-4c9c-8a14-0cd742f752b5`
+
+| # | Type | Node ID | Summary | Conf |
+|---|------|---------|---------|------|
+| 1 | 📖 Context Load | `node-000` | The agent is reading and understanding the existing codebase structure before making architectural decisions. It is gathering information about the current state of the project to inform how to restructure it. | 0.85 |
+| 2 | 📖 Context Load | `hnode-000` | Good - I have a full picture of the existing codebase. Here's what I'm building:
+
+**Architecture decisions:**
+- `backend/` — new product code (FastAPI + PostgreSQL via SQLAlchemy async + DynamoDB reta | 0.40 |
+| 3 | ✅ Solution | `node-001` | The agent has completed its analysis and is now implementing a concrete architectural solution, creating the directory structure and configuration files for the new backend system. It is executing a planned build based on prior understanding of the codebase. | 0.82 |
+| 4 | ✅ Solution | `node-002` | The agent is systematically creating core backend configuration files (config.py, database.py, security.py) as part of building out the supply chain tracker application infrastructure. This represents active implementation of a planned solution structure. | 0.75 |
+| 5 | ✅ Solution | `node-003` | The agent is systematically creating backend infrastructure files (database.py, security.py, base models) as part of building out a supply chain tracker application. It is executing a planned implementation sequence with no apparent issues or uncertainty. | 0.82 |
+| 6 | ✅ Solution | `node-004` | The agent is creating ORM model files for the supply chain tracker application, implementing the database layer by writing base model and organization model files to disk. | 0.82 |
+| 7 | ✅ Solution | `node-005` | The agent is creating multiple model files (organization, user, shipment) as part of building out the backend data layer for the supply chain tracker application. This represents concrete implementation work toward a resolved architecture. | 0.72 |
+| 8 | ✅ Solution | `node-006` | The agent is systematically creating model files for the supply chain tracker backend, successfully writing user, shipment, and document model files to disk. This represents progress toward completing the backend data model implementation. | 0.75 |
+| 9 | ✅ Solution | `node-007` | The agent is systematically creating model files as part of building out the supply chain tracker backend, successfully writing document and exception event models to disk. This represents forward progress toward a complete working implementation. | 0.72 |
+| 10 | ✅ Solution | `node-008` | The agent is systematically creating the core backend files for a supply chain tracking application, including models and a key exception detection engine service. It is executing a planned implementation by writing files in sequence. | 0.82 |
+| 11 | ✅ Solution | `node-009` | The agent is actively building out the implementation by creating service files and test suites, progressing toward a working system. It is executing a planned sequence of file creation steps to complete the exception detection engine and its tests. | 0.72 |
+| 12 | ✅ Solution | `node-010` | The agent is systematically creating the required backend files (schemas, tests) to complete the project setup. It is executing on a clear plan, writing out Pydantic schema files and test files to build the supply chain tracker backend. | 0.75 |
+| 13 | 📖 Context Load | `hnode-001` | Good point — flagging this now because it affects schema choices. Let me finish the critical files then address the offline sync design directly. | 0.40 |
+| 14 | ✅ Solution | `node-011` | The agent is systematically creating Pydantic schema files for the supply chain tracker backend, implementing the data validation layer for shipments, documents, and exception events. This represents active progress toward completing the project structure. | 0.72 |
+| 15 | ✅ Solution | `node-012` | The agent is systematically creating schema and dependency files for a supply chain tracker backend, implementing Pydantic models and FastAPI dependencies as part of building out the application structure. | 0.85 |
+| 16 | ✅ Solution | `node-013` | The agent is systematically creating the required backend files for a supply chain tracker application, including authentication schemas, API dependencies, and auth router. This represents active implementation progress toward a working solution. | 0.82 |
+| 17 | ✅ Solution | `node-014` | The agent is systematically creating the backend router files (auth, shipments, documents) as part of building out the supply chain tracker application. This represents active implementation of a planned solution architecture. | 0.85 |
+| 18 | ✅ Solution | `node-015` | The agent is systematically creating router files for the backend API, implementing the shipments, documents, and exceptions endpoints as part of building out the supply chain tracker application. | 0.82 |
+| 19 | ✅ Solution | `node-016` | The agent is creating and wiring together the final application files, including the router for exceptions and the main FastAPI application entry point that integrates all routers. This represents the culmination of building out the backend API structure. | 0.72 |
+| 20 | ✅ Solution | `node-017` | The agent is systematically creating all remaining project files (init files, requirements, alembic config, env example) in parallel to complete the backend project setup. This represents the agent executing its plan to completion after having scaffolded the core application files. | 0.72 |
+| 21 | 📖 Context Load | `hnode-002` | Now the remaining init files, requirements, alembic, and env example all in parallel: | 0.40 |
+| 22 | ✅ Solution | `node-018` | The agent is systematically creating the foundational project files for a supply chain tracker backend, including package initialization, dependencies, and database migration configuration. This represents active construction of the working project structure. | 0.72 |
+| 23 | ✅ Solution | `node-019` | The agent is creating configuration files (alembic env.py, .env.example, alembic.ini) necessary to set up the database migration infrastructure for the supply chain tracker project. This represents a working resolution of the database setup requirements. | 0.75 |
+| 24 | ✅ Solution | `node-020` | The agent is systematically creating the project structure by generating configuration files and initializing Python package files. This is part of building out the complete supply chain tracker application scaffold. | 0.82 |
+| 25 | 📖 Context Load | `hnode-003` | Now the `__init__.py` files and move the simulation: | 0.40 |
+| 26 | ✅ Solution | `node-021` | The agent is setting up the Python package structure by creating __init__.py files and a pytest configuration file, completing the project scaffolding. This is a concrete implementation step finalizing the backend module structure. | 0.72 |
+| 27 | ❌ Dead End ⚡ | `node-022` | The agent attempts to install dependencies and run tests but fails because pip and python commands are not found in the environment. This blocks the immediate approach of verifying the exception engine implementation. | 0.95 |
+| 28 | 📖 Context Load | `hnode-004` | Now run the tests to verify the exception engine works: | 0.40 |
+| 29 | 🔍 Investigation | `node-023` | The agent is troubleshooting the Python environment after discovering that 'pip' and 'python' commands are not found, then locating the correct executables and retrying the dependency installation and test run. | 0.90 |
+| 30 | 🔄 Pivot ⚡ | `node-024` | The agent encounters a system Python installation restriction preventing direct pip installation, so it pivots to creating a virtual environment to properly install dependencies and run tests. | 0.95 |
+| 31 | 🔍 Investigation | `node-025` | The agent is setting up a test environment and iteratively running tests to diagnose import errors, installing missing dependencies as they are discovered. Each test run reveals what's missing, guiding the next installation step. | 0.88 |
+| 32 | 🔍 Investigation | `node-026` | The agent is iteratively installing missing dependencies and re-running tests to diagnose import errors. Each test run reveals another missing package, prompting the next installation attempt. | 0.82 |
+| 33 | 📖 Context Load | `hnode-005` | The import chain pulls in boto3. Let me install all deps at once: | 0.40 |
+| 34 | 🔄 Pivot ⚡ | `node-027` | The agent identifies that the database engine is being created at module import time (causing test collection failures) and explicitly changes approach to use lazy initialization via factory functions. | 0.95 |
+| 35 | 📖 Context Load | `hnode-006` | The engine is created at module import time. I need to make it lazy: | 0.40 |
+| 36 | ✅ Solution | `node-028` | The agent implements a lazy initialization pattern for the database engine to prevent connection attempts at module import time, which was causing test collection failures. The fix converts eager engine creation to deferred factory functions that only execute when first called. | 0.85 |
+| 37 | ✅ Solution | `node-029` | The agent is applying fixes to resolve known issues: updating the database session factory usage and migrating from deprecated Pydantic v1 Config class syntax to Pydantic v2 model_config format. | 0.85 |
+| 38 | 📖 Context Load | `hnode-007` | Also fix the pydantic v2 deprecation warning in config.py: | 0.40 |
+| 39 | ✅ Solution | `node-030` | The agent applies a configuration fix to resolve a Pydantic v2 compatibility issue and confirms all 40 tests pass successfully. The segment ends with a working resolution. | 0.95 |
+| 40 | ✅ Solution | `node-031` | The agent confirms all 40 tests are passing and proceeds to save project context to memory files for future reference. This represents successful completion of the task with tests verified and project state persisted. | 0.92 |
+| 41 | 📖 Context Load | `hnode-008` | **40/40 passing.** Now let me save a memory about this project and address your offline sync question. | 0.40 |
+| 42 | ✅ Solution | `node-032` | The agent delivers a complete working solution with 40/40 tests passing, summarizes the full architecture built, and provides a detailed technical recommendation for offline sync architecture suited to the Iraq use case. | 0.95 |
+| 43 | 🔄 Pivot ⚡ | `hnode-009` | ---
+
+**40/40 tests passing.** Here's what was built:
+
+## What was created
+</code></pre>
+<p>backend/ ├── core/ config.py, database.py (lazy engine), security.py ├── models/ Organization, User, Sh | 0.40 | | 44 | ✅ Solution | <code>node-033</code> | The agent has successfully completed the core implementation with 40/40 tests passing and is now extending the solution with the offline sync architecture it recommended, creating the ShipmentEvent model and sync router. | 0.88 | | 45 | ✅ Solution | <code>node-034</code> | The agent is implementing offline-first sync functionality by creating new model and router files, then registering the sync router in the main application. This represents a working resolution of adding sync endpoints to the supply chain tracker. | 0.85 | | 46 | ✅ Solution | <code>node-035</code> | The agent is integrating the new sync router into the main FastAPI application by adding the import and registering the router with the app. This is a concrete implementation step completing the sync functionality setup. | 0.78 | | 47 | ✅ Solution | <code>node-036</code> | The agent is systematically completing the implementation by registering the new ShipmentEvent model in the models <strong>init</strong>.py file, finalizing the integration so Alembic can discover it and the application can use it properly. | 0.72 | | 48 | 📖 Context Load | <code>hnode-010</code> | Now register <code>ShipmentEvent</code> with the models <code>__init__</code>: | 0.40 | | 49 | ✅ Solution | <code>node-037</code> | The agent is writing and running unit tests for the sync engine’s pure logic components (event sorting, idempotency, payload parsing) to validate the implementation. This represents a working resolution phase where the agent creates test coverage and executes the test suite to confirm correctness. | 0.72 | | 50 | 📖 Context Load | <code>hnode-011</code> | Now write tests for the sync engine logic — the part that can be tested without a DB (event sorting, idempotency logic, payload parsing): | 0.40 | | 51 | ✅ Solution | <code>node-038</code> | The agent has successfully completed the implementation, with all 50 tests passing. It provides a comprehensive summary of the complete system architecture, explaining design decisions and next steps. | 0.98 | | 52 | ✅ Solution | <code>hnode-012</code> | <strong>50/50 passing.</strong> Here’s the final state of what was built:</p>
+<hr>
+</section>
+<section id="complete-structure" class="level2">
+<h2 class="anchored" data-anchor-id="complete-structure">Complete structure</h2>
+<pre><code>backend/
+├── core/
+│   ├── config.py          Settings + thresholds (pydantic-settings)
+│   ├── database.p | 0.40 |
+| 53 | 📖 Context Load | `node-039` | The agent is reading and interpreting file system output showing recent JSONL session files, then explaining what those files represent to the user. No active problem-solving or reasoning about code is occurring. | 0.82 |
+| 54 | 📖 Context Load | `hnode-013` | Those are the active session files for your current projects. The supply-chain-tracker session (`e0925b7a`) is this conversation, along with the two subagents spun up during it (the codebase explorer  | 0.40 |
+
+---
+
+## Edges
+
+_Edges are not persisted to the vector store. Pass `--dag-json` with a saved DAG file to include edges._
+
+---
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    hnode_000["📖 Good - I have a full picture of the existing codebase. Here'…"]
+    hnode_001["📖 Good point — flagging this now because it affects schema cho…"]
+    hnode_002["📖 Now the remaining init files, requirements, alembic, and env…"]
+    hnode_003["📖 Now the `__init__.py` files and move the simulation:"]
+    hnode_004["📖 Now run the tests to verify the exception engine works:"]
+    hnode_005["📖 The import chain pulls in boto3. Let me install all deps at …"]
+    hnode_006["📖 The engine is created at module import time. I need to make …"]
+    hnode_007["📖 Also fix the pydantic v2 deprecation warning in config.py:"]
+    hnode_008["📖 **40/40 passing.** Now let me save a memory about this proje…"]
+    hnode_009["🔄 ---
+
+**40/40 tests passing.** Here's what was built:
+
+## Wha… ⚡"]
+    hnode_010["📖 Now register `ShipmentEvent` with the models `__init__`:"]
+    hnode_011["📖 Now write tests for the sync engine logic — the part that ca…"]
+    hnode_012["✅ **50/50 passing.** Here's the final state of what was built:…"]
+    hnode_013["📖 Those are the active session files for your current projects…"]
+    node_000["📖 The agent is reading and understanding the existing codebase…"]
+    node_001["✅ The agent has completed its analysis and is now implementing…"]
+    node_002["✅ The agent is systematically creating core backend configurat…"]
+    node_003["✅ The agent is systematically creating backend infrastructure …"]
+    node_004["✅ The agent is creating ORM model files for the supply chain t…"]
+    node_005["✅ The agent is creating multiple model files (organization, us…"]
+    node_006["✅ The agent is systematically creating model files for the sup…"]
+    node_007["✅ The agent is systematically creating model files as part of …"]
+    node_008["✅ The agent is systematically creating the core backend files …"]
+    node_009["✅ The agent is actively building out the implementation by cre…"]
+    node_010["✅ The agent is systematically creating the required backend fi…"]
+    node_011["✅ The agent is systematically creating Pydantic schema files f…"]
+    node_012["✅ The agent is systematically creating schema and dependency f…"]
+    node_013["✅ The agent is systematically creating the required backend fi…"]
+    node_014["✅ The agent is systematically creating the backend router file…"]
+    node_015["✅ The agent is systematically creating router files for the ba…"]
+    node_016["✅ The agent is creating and wiring together the final applicat…"]
+    node_017["✅ The agent is systematically creating all remaining project f…"]
+    node_018["✅ The agent is systematically creating the foundational projec…"]
+    node_019["✅ The agent is creating configuration files (alembic env.py, .…"]
+    node_020["✅ The agent is systematically creating the project structure b…"]
+    node_021["✅ The agent is setting up the Python package structure by crea…"]
+    node_022["❌ The agent attempts to install dependencies and run tests but… ⚡"]
+    node_023["🔍 The agent is troubleshooting the Python environment after di…"]
+    node_024["🔄 The agent encounters a system Python installation restrictio… ⚡"]
+    node_025["🔍 The agent is setting up a test environment and iteratively r…"]
+    node_026["🔍 The agent is iteratively installing missing dependencies and…"]
+    node_027["🔄 The agent identifies that the database engine is being creat… ⚡"]
+    node_028["✅ The agent implements a lazy initialization pattern for the d…"]
+    node_029["✅ The agent is applying fixes to resolve known issues: updatin…"]
+    node_030["✅ The agent applies a configuration fix to resolve a Pydantic …"]
+    node_031["✅ The agent confirms all 40 tests are passing and proceeds to …"]
+    node_032["✅ The agent delivers a complete working solution with 40/40 te…"]
+    node_033["✅ The agent has successfully completed the core implementation…"]
+    node_034["✅ The agent is implementing offline-first sync functionality b…"]
+    node_035["✅ The agent is integrating the new sync router into the main F…"]
+    node_036["✅ The agent is systematically completing the implementation by…"]
+    node_037["✅ The agent is writing and running unit tests for the sync eng…"]
+    node_038["✅ The agent has successfully completed the implementation, wit…"]
+    node_039["📖 The agent is reading and interpreting file system output sho…"]
+
+    node_000 --&gt; hnode_000
+    hnode_000 --&gt; node_001
+    node_001 --&gt; node_002
+    node_002 --&gt; node_003
+    node_003 --&gt; node_004
+    node_004 --&gt; node_005
+    node_005 --&gt; node_006
+    node_006 --&gt; node_007
+    node_007 --&gt; node_008
+    node_008 --&gt; node_009
+    node_009 --&gt; node_010
+    node_010 --&gt; hnode_001
+    hnode_001 --&gt; node_011
+    node_011 --&gt; node_012
+    node_012 --&gt; node_013
+    node_013 --&gt; node_014
+    node_014 --&gt; node_015
+    node_015 --&gt; node_016
+    node_016 --&gt; node_017
+    node_017 --&gt; hnode_002
+    hnode_002 --&gt; node_018
+    node_018 --&gt; node_019
+    node_019 --&gt; node_020
+    node_020 --&gt; hnode_003
+    hnode_003 --&gt; node_021
+    node_021 --&gt; node_022
+    node_022 --&gt; hnode_004
+    hnode_004 --&gt; node_023
+    node_023 --&gt; node_024
+    node_024 --&gt; node_025
+    node_025 --&gt; node_026
+    node_026 --&gt; hnode_005
+    hnode_005 --&gt; node_027
+    node_027 --&gt; hnode_006
+    hnode_006 --&gt; node_028
+    node_028 --&gt; node_029
+    node_029 --&gt; hnode_007
+    hnode_007 --&gt; node_030
+    node_030 --&gt; node_031
+    node_031 --&gt; hnode_008
+    hnode_008 --&gt; node_032
+    node_032 --&gt; hnode_009
+    hnode_009 --&gt; node_033
+    node_033 --&gt; node_034
+    node_034 --&gt; node_035
+    node_035 --&gt; node_036
+    node_036 --&gt; hnode_010
+    hnode_010 --&gt; node_037
+    node_037 --&gt; hnode_011
+    hnode_011 --&gt; node_038
+    node_038 --&gt; hnode_012
+    hnode_012 --&gt; node_039
+    node_039 --&gt; hnode_013
+
+    classDef hypothesis    fill:#60a5fa,stroke:#3b82f6,color:#fff
+    classDef investigation fill:#a78bfa,stroke:#7c3aed,color:#fff
+    classDef discovery     fill:#34d399,stroke:#059669,color:#fff
+    classDef pivot         fill:#fb923c,stroke:#ea580c,color:#fff
+    classDef solution      fill:#4ade80,stroke:#16a34a,color:#fff
+    classDef dead_end      fill:#f87171,stroke:#dc2626,color:#fff
+    classDef context_load  fill:#e5e7eb,stroke:#6b7280,color:#111
+
+    class hnode_000 context_load
+    class hnode_001 context_load
+    class hnode_002 context_load
+    class hnode_003 context_load
+    class hnode_004 context_load
+    class hnode_005 context_load
+    class hnode_006 context_load
+    class hnode_007 context_load
+    class hnode_008 context_load
+    class hnode_009 pivot
+    class hnode_010 context_load
+    class hnode_011 context_load
+    class hnode_012 solution
+    class hnode_013 context_load
+    class node_000 context_load
+    class node_001 solution
+    class node_002 solution
+    class node_003 solution
+    class node_004 solution
+    class node_005 solution
+    class node_006 solution
+    class node_007 solution
+    class node_008 solution
+    class node_009 solution
+    class node_010 solution
+    class node_011 solution
+    class node_012 solution
+    class node_013 solution
+    class node_014 solution
+    class node_015 solution
+    class node_016 solution
+    class node_017 solution
+    class node_018 solution
+    class node_019 solution
+    class node_020 solution
+    class node_021 solution
+    class node_022 dead_end
+    class node_023 investigation
+    class node_024 pivot
+    class node_025 investigation
+    class node_026 investigation
+    class node_027 pivot
+    class node_028 solution
+    class node_029 solution
+    class node_030 solution
+    class node_031 solution
+    class node_032 solution
+    class node_033 solution
+    class node_034 solution
+    class node_035 solution
+    class node_036 solution
+    class node_037 solution
+    class node_038 solution
+    class node_039 context_load</code></pre>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

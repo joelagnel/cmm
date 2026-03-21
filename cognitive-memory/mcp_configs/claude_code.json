@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "cognitive-memory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "src.delivery"],
+      "env": {
+        "CMM_STORE_PATH": "/Users/YOUR_USERNAME/.cognitive-memory/store",
+        "CMM_PROJECT_ID": "your-project-id",
+        "PYTHONPATH": "/path/to/cognitive-memory"
+      }
+    }
+  }
+}
