@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reasoning DAG — supply-chain</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0f172a; color: #e2e8f0;
+    overflow: hidden; width: 100vw; height: 100vh;
+  }
+
+  #header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, rgba(15,23,42,0.97) 60%, transparent);
+  }
+  #header .tag { font-size: 11px; font-weight: 600; color: #f59e0b; letter-spacing: 0.15em; text-transform: uppercase; }
+  #header h1 { font-size: 18px; font-weight: 700; margin: 4px 0; }
+  #header .meta { font-size: 12px; color: #64748b; }
+
+  #legend {
+    position: fixed; top: 16px; right: 24px; z-index: 10;
+    display: flex; gap: 6px; flex-wrap: wrap; max-width: 500px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    font-size: 9px; font-weight: 600; letter-spacing: 0.05em;
+  }
+
+  #canvas { width: 100%; height: 100%; }
+
+  .node { cursor: pointer; transition: opacity 0.15s; }
+  .node:hover { opacity: 0.9; }
+  .edge { transition: opacity 0.15s; }
+  .edge:hover { opacity: 1 !important; }
+  .edge-label { pointer-events: none; }
+
+  #detail {
+    position: fixed; bottom: 16px; left: 16px; max-width: 700px;
+    background: rgba(30,41,59,0.97); border-radius: 12px;
+    padding: 20px; backdrop-filter: blur(16px);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    display: none; z-index: 20;
+  }
+  #detail.visible { display: block; }
+  #detail .type-badge { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  #detail .summary { font-size: 13px; line-height: 1.6; margin: 12px 0; }
+  #detail .evidence { font-size: 11px; color: #94a3b8; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; line-height: 1.5; }
+  #detail .evidence-label { color: #64748b; font-weight: 600; }
+  #detail .meta-row { display: flex; gap: 16px; margin-top: 10px; font-size: 10px; color: #475569; }
+  #detail .close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #64748b; cursor: pointer; font-size: 18px; }
+  .pivot-badge { font-size: 9px; padding: 2px 8px; border-radius: 4px; background: rgba(245,158,11,0.13); color: #f59e0b; font-weight: 700; border: 1px solid rgba(245,158,11,0.27); margin-left: 8px; }
+
+  #instructions {
+    position: fixed; bottom: 16px; right: 16px; font-size: 10px;
+    color: #334155; text-align: right; line-height: 1.6; z-index: 10;
+  }
+
+  @keyframes fadeInNode {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes drawEdge {
+    from { stroke-dashoffset: 500; }
+    to { stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="tag">Reasoning DAG</div>
+  <h1>Session Extraction: supply-chain</h1>
+  <div class="meta" id="meta">Generated: 2026-03-22T18:07:21.579756</div>
+</div>
+
+<div id="legend"></div>
+
+<svg id="canvas"></svg>
+
+<div id="detail">
+  <button class="close" onclick="closeDetail()">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<div id="instructions">scroll to zoom &middot; drag to pan &middot; click node for details</div>
+
+<script>
+const NODES = [
+  {
+    "node_id": "node-000",
+    "node_type": "context_load",
+    "summary": "The agent is reading and understanding the existing codebase structure before making architectural decisions. It is gathering information about the current state of the project to inform how to restructure it.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      0,
+      5
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-000",
+    "node_type": "context_load",
+    "summary": "Good - I have a full picture of the existing codebase. Here's what I'm building:\n\n**Architecture decisions:**\n- `backend/` \u2014 new product code (FastAPI + PostgreSQL via SQLAlchemy async + DynamoDB reta",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      3,
+      4
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-001",
+    "node_type": "solution",
+    "summary": "The agent has completed its analysis and is now implementing a concrete architectural solution, creating the directory structure and configuration files for the new backend system. It is executing a planned build based on prior understanding of the codebase.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      3,
+      8
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-002",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating core backend configuration files (config.py, database.py, security.py) as part of building out the supply chain tracker application infrastructure. This represents active implementation of a planned solution structure.",
+    "evidence": "",
+    "confidence": 0.75,
+    "is_pivot": false,
+    "message_range": [
+      6,
+      11
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-003",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating backend infrastructure files (database.py, security.py, base models) as part of building out a supply chain tracker application. It is executing a planned implementation sequence with no apparent issues or uncertainty.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      9,
+      14
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-004",
+    "node_type": "solution",
+    "summary": "The agent is creating ORM model files for the supply chain tracker application, implementing the database layer by writing base model and organization model files to disk.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      12,
+      17
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-005",
+    "node_type": "solution",
+    "summary": "The agent is creating multiple model files (organization, user, shipment) as part of building out the backend data layer for the supply chain tracker application. This represents concrete implementation work toward a resolved architecture.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      15,
+      20
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-006",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating model files for the supply chain tracker backend, successfully writing user, shipment, and document model files to disk. This represents progress toward completing the backend data model implementation.",
+    "evidence": "",
+    "confidence": 0.75,
+    "is_pivot": false,
+    "message_range": [
+      18,
+      23
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-007",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating model files as part of building out the supply chain tracker backend, successfully writing document and exception event models to disk. This represents forward progress toward a complete working implementation.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      21,
+      26
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-008",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the core backend files for a supply chain tracking application, including models and a key exception detection engine service. It is executing a planned implementation by writing files in sequence.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      24,
+      29
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-009",
+    "node_type": "solution",
+    "summary": "The agent is actively building out the implementation by creating service files and test suites, progressing toward a working system. It is executing a planned sequence of file creation steps to complete the exception detection engine and its tests.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      27,
+      32
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-010",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the required backend files (schemas, tests) to complete the project setup. It is executing on a clear plan, writing out Pydantic schema files and test files to build the supply chain tracker backend.",
+    "evidence": "",
+    "confidence": 0.75,
+    "is_pivot": false,
+    "message_range": [
+      30,
+      35
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-001",
+    "node_type": "context_load",
+    "summary": "Good point \u2014 flagging this now because it affects schema choices. Let me finish the critical files then address the offline sync design directly.",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      31,
+      32
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-011",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating Pydantic schema files for the supply chain tracker backend, implementing the data validation layer for shipments, documents, and exception events. This represents active progress toward completing the project structure.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      33,
+      38
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-012",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating schema and dependency files for a supply chain tracker backend, implementing Pydantic models and FastAPI dependencies as part of building out the application structure.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      36,
+      41
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-013",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the required backend files for a supply chain tracker application, including authentication schemas, API dependencies, and auth router. This represents active implementation progress toward a working solution.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      39,
+      44
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-014",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the backend router files (auth, shipments, documents) as part of building out the supply chain tracker application. This represents active implementation of a planned solution architecture.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      42,
+      47
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-015",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating router files for the backend API, implementing the shipments, documents, and exceptions endpoints as part of building out the supply chain tracker application.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      45,
+      50
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-016",
+    "node_type": "solution",
+    "summary": "The agent is creating and wiring together the final application files, including the router for exceptions and the main FastAPI application entry point that integrates all routers. This represents the culmination of building out the backend API structure.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      48,
+      53
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-017",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating all remaining project files (init files, requirements, alembic config, env example) in parallel to complete the backend project setup. This represents the agent executing its plan to completion after having scaffolded the core application files.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      51,
+      56
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-002",
+    "node_type": "context_load",
+    "summary": "Now the remaining init files, requirements, alembic, and env example all in parallel:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      52,
+      53
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-018",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the foundational project files for a supply chain tracker backend, including package initialization, dependencies, and database migration configuration. This represents active construction of the working project structure.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      54,
+      59
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-019",
+    "node_type": "solution",
+    "summary": "The agent is creating configuration files (alembic env.py, .env.example, alembic.ini) necessary to set up the database migration infrastructure for the supply chain tracker project. This represents a working resolution of the database setup requirements.",
+    "evidence": "",
+    "confidence": 0.75,
+    "is_pivot": false,
+    "message_range": [
+      57,
+      62
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-020",
+    "node_type": "solution",
+    "summary": "The agent is systematically creating the project structure by generating configuration files and initializing Python package files. This is part of building out the complete supply chain tracker application scaffold.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      60,
+      65
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-003",
+    "node_type": "context_load",
+    "summary": "Now the `__init__.py` files and move the simulation:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      63,
+      64
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-021",
+    "node_type": "solution",
+    "summary": "The agent is setting up the Python package structure by creating __init__.py files and a pytest configuration file, completing the project scaffolding. This is a concrete implementation step finalizing the backend module structure.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      63,
+      68
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-022",
+    "node_type": "dead_end",
+    "summary": "The agent attempts to install dependencies and run tests but fails because pip and python commands are not found in the environment. This blocks the immediate approach of verifying the exception engine implementation.",
+    "evidence": "",
+    "confidence": 0.95,
+    "is_pivot": true,
+    "message_range": [
+      66,
+      71
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-004",
+    "node_type": "context_load",
+    "summary": "Now run the tests to verify the exception engine works:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      68,
+      69
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-023",
+    "node_type": "investigation",
+    "summary": "The agent is troubleshooting the Python environment after discovering that 'pip' and 'python' commands are not found, then locating the correct executables and retrying the dependency installation and test run.",
+    "evidence": "",
+    "confidence": 0.9,
+    "is_pivot": false,
+    "message_range": [
+      69,
+      74
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-024",
+    "node_type": "pivot",
+    "summary": "The agent encounters a system Python installation restriction preventing direct pip installation, so it pivots to creating a virtual environment to properly install dependencies and run tests.",
+    "evidence": "",
+    "confidence": 0.95,
+    "is_pivot": true,
+    "message_range": [
+      72,
+      77
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-025",
+    "node_type": "investigation",
+    "summary": "The agent is setting up a test environment and iteratively running tests to diagnose import errors, installing missing dependencies as they are discovered. Each test run reveals what's missing, guiding the next installation step.",
+    "evidence": "",
+    "confidence": 0.88,
+    "is_pivot": false,
+    "message_range": [
+      75,
+      80
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-026",
+    "node_type": "investigation",
+    "summary": "The agent is iteratively installing missing dependencies and re-running tests to diagnose import errors. Each test run reveals another missing package, prompting the next installation attempt.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      78,
+      83
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-005",
+    "node_type": "context_load",
+    "summary": "The import chain pulls in boto3. Let me install all deps at once:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      81,
+      82
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-027",
+    "node_type": "pivot",
+    "summary": "The agent identifies that the database engine is being created at module import time (causing test collection failures) and explicitly changes approach to use lazy initialization via factory functions.",
+    "evidence": "",
+    "confidence": 0.95,
+    "is_pivot": true,
+    "message_range": [
+      81,
+      86
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-006",
+    "node_type": "context_load",
+    "summary": "The engine is created at module import time. I need to make it lazy:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      84,
+      85
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-028",
+    "node_type": "solution",
+    "summary": "The agent implements a lazy initialization pattern for the database engine to prevent connection attempts at module import time, which was causing test collection failures. The fix converts eager engine creation to deferred factory functions that only execute when first called.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      84,
+      89
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-029",
+    "node_type": "solution",
+    "summary": "The agent is applying fixes to resolve known issues: updating the database session factory usage and migrating from deprecated Pydantic v1 Config class syntax to Pydantic v2 model_config format.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      87,
+      92
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-007",
+    "node_type": "context_load",
+    "summary": "Also fix the pydantic v2 deprecation warning in config.py:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      89,
+      90
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-030",
+    "node_type": "solution",
+    "summary": "The agent applies a configuration fix to resolve a Pydantic v2 compatibility issue and confirms all 40 tests pass successfully. The segment ends with a working resolution.",
+    "evidence": "",
+    "confidence": 0.95,
+    "is_pivot": false,
+    "message_range": [
+      90,
+      95
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-031",
+    "node_type": "solution",
+    "summary": "The agent confirms all 40 tests are passing and proceeds to save project context to memory files for future reference. This represents successful completion of the task with tests verified and project state persisted.",
+    "evidence": "",
+    "confidence": 0.92,
+    "is_pivot": false,
+    "message_range": [
+      93,
+      98
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-008",
+    "node_type": "context_load",
+    "summary": "**40/40 passing.** Now let me save a memory about this project and address your offline sync question.",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      94,
+      95
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-032",
+    "node_type": "solution",
+    "summary": "The agent delivers a complete working solution with 40/40 tests passing, summarizes the full architecture built, and provides a detailed technical recommendation for offline sync architecture suited to the Iraq use case.",
+    "evidence": "",
+    "confidence": 0.95,
+    "is_pivot": false,
+    "message_range": [
+      96,
+      101
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-009",
+    "node_type": "pivot",
+    "summary": "---\n\n**40/40 tests passing.** Here's what was built:\n\n## What was created\n\n```\nbackend/\n\u251c\u2500\u2500 core/           config.py, database.py (lazy engine), security.py\n\u251c\u2500\u2500 models/         Organization, User, Sh",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": true,
+    "message_range": [
+      99,
+      100
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-033",
+    "node_type": "solution",
+    "summary": "The agent has successfully completed the core implementation with 40/40 tests passing and is now extending the solution with the offline sync architecture it recommended, creating the ShipmentEvent model and sync router.",
+    "evidence": "",
+    "confidence": 0.88,
+    "is_pivot": false,
+    "message_range": [
+      99,
+      104
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-034",
+    "node_type": "solution",
+    "summary": "The agent is implementing offline-first sync functionality by creating new model and router files, then registering the sync router in the main application. This represents a working resolution of adding sync endpoints to the supply chain tracker.",
+    "evidence": "",
+    "confidence": 0.85,
+    "is_pivot": false,
+    "message_range": [
+      102,
+      107
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-035",
+    "node_type": "solution",
+    "summary": "The agent is integrating the new sync router into the main FastAPI application by adding the import and registering the router with the app. This is a concrete implementation step completing the sync functionality setup.",
+    "evidence": "",
+    "confidence": 0.78,
+    "is_pivot": false,
+    "message_range": [
+      105,
+      110
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-036",
+    "node_type": "solution",
+    "summary": "The agent is systematically completing the implementation by registering the new ShipmentEvent model in the models __init__.py file, finalizing the integration so Alembic can discover it and the application can use it properly.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      108,
+      113
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-010",
+    "node_type": "context_load",
+    "summary": "Now register `ShipmentEvent` with the models `__init__`:",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      109,
+      110
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-037",
+    "node_type": "solution",
+    "summary": "The agent is writing and running unit tests for the sync engine's pure logic components (event sorting, idempotency, payload parsing) to validate the implementation. This represents a working resolution phase where the agent creates test coverage and executes the test suite to confirm correctness.",
+    "evidence": "",
+    "confidence": 0.72,
+    "is_pivot": false,
+    "message_range": [
+      111,
+      116
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-011",
+    "node_type": "context_load",
+    "summary": "Now write tests for the sync engine logic \u2014 the part that can be tested without a DB (event sorting, idempotency logic, payload parsing):",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      112,
+      113
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-038",
+    "node_type": "solution",
+    "summary": "The agent has successfully completed the implementation, with all 50 tests passing. It provides a comprehensive summary of the complete system architecture, explaining design decisions and next steps.",
+    "evidence": "",
+    "confidence": 0.98,
+    "is_pivot": false,
+    "message_range": [
+      114,
+      119
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-012",
+    "node_type": "solution",
+    "summary": "**50/50 passing.** Here's the final state of what was built:\n\n---\n\n## Complete structure\n\n```\nbackend/\n\u251c\u2500\u2500 core/\n\u2502   \u251c\u2500\u2500 config.py          Settings + thresholds (pydantic-settings)\n\u2502   \u251c\u2500\u2500 database.p",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      117,
+      118
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "node-039",
+    "node_type": "context_load",
+    "summary": "The agent is reading and interpreting file system output showing recent JSONL session files, then explaining what those files represent to the user. No active problem-solving or reasoning about code is occurring.",
+    "evidence": "",
+    "confidence": 0.82,
+    "is_pivot": false,
+    "message_range": [
+      117,
+      122
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  },
+  {
+    "node_id": "hnode-013",
+    "node_type": "context_load",
+    "summary": "Those are the active session files for your current projects. The supply-chain-tracker session (`e0925b7a`) is this conversation, along with the two subagents spun up during it (the codebase explorer ",
+    "evidence": "",
+    "confidence": 0.4,
+    "is_pivot": false,
+    "message_range": [
+      121,
+      122
+    ],
+    "session_id": "e0925b7a-fe70-4c9c-8a14-0cd742f752b5"
+  }
+];
+const EDGES = [
+  {
+    "source_id": "node-000",
+    "target_id": "hnode-000",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-000",
+    "target_id": "node-001",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-001",
+    "target_id": "node-002",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-002",
+    "target_id": "node-003",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-003",
+    "target_id": "node-004",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-004",
+    "target_id": "node-005",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-005",
+    "target_id": "node-006",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-006",
+    "target_id": "node-007",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-007",
+    "target_id": "node-008",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-008",
+    "target_id": "node-009",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-009",
+    "target_id": "node-010",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-010",
+    "target_id": "hnode-001",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-001",
+    "target_id": "node-011",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-011",
+    "target_id": "node-012",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-012",
+    "target_id": "node-013",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-013",
+    "target_id": "node-014",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-014",
+    "target_id": "node-015",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-015",
+    "target_id": "node-016",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-016",
+    "target_id": "node-017",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-017",
+    "target_id": "hnode-002",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-002",
+    "target_id": "node-018",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-018",
+    "target_id": "node-019",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-019",
+    "target_id": "node-020",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-020",
+    "target_id": "hnode-003",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-003",
+    "target_id": "node-021",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-021",
+    "target_id": "node-022",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "node-022",
+    "target_id": "hnode-004",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-004",
+    "target_id": "node-023",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "node-023",
+    "target_id": "node-024",
+    "relationship": "triggered_pivot"
+  },
+  {
+    "source_id": "node-024",
+    "target_id": "node-025",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "node-025",
+    "target_id": "node-026",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "node-026",
+    "target_id": "hnode-005",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-005",
+    "target_id": "node-027",
+    "relationship": "triggered_pivot"
+  },
+  {
+    "source_id": "node-027",
+    "target_id": "hnode-006",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-006",
+    "target_id": "node-028",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-028",
+    "target_id": "node-029",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-029",
+    "target_id": "hnode-007",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-007",
+    "target_id": "node-030",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-030",
+    "target_id": "node-031",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-031",
+    "target_id": "hnode-008",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-008",
+    "target_id": "node-032",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-032",
+    "target_id": "hnode-009",
+    "relationship": "triggered_pivot"
+  },
+  {
+    "source_id": "hnode-009",
+    "target_id": "node-033",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-033",
+    "target_id": "node-034",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-034",
+    "target_id": "node-035",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-035",
+    "target_id": "node-036",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-036",
+    "target_id": "hnode-010",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-010",
+    "target_id": "node-037",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-037",
+    "target_id": "hnode-011",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "hnode-011",
+    "target_id": "node-038",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "node-038",
+    "target_id": "hnode-012",
+    "relationship": "enabled"
+  },
+  {
+    "source_id": "hnode-012",
+    "target_id": "node-039",
+    "relationship": "led_to"
+  },
+  {
+    "source_id": "node-039",
+    "target_id": "hnode-013",
+    "relationship": "led_to"
+  }
+];
+const PIVOTS = ["node-022", "node-024", "node-027", "hnode-009"];
+
+const TYPE_CFG = {
+  context_load: { fill: "#64748b", label: "CONTEXT", icon: "\ud83d\udcd6" },
+  hypothesis:   { fill: "#3b82f6", label: "HYPOTHESIS", icon: "\ud83d\udcad" },
+  investigation:{ fill: "#8b5cf6", label: "INVESTIGATE", icon: "\ud83d\udd0d" },
+  discovery:    { fill: "#10b981", label: "DISCOVERY", icon: "\ud83d\udca1" },
+  pivot:        { fill: "#f59e0b", label: "PIVOT", icon: "\ud83d\udd04" },
+  dead_end:     { fill: "#ef4444", label: "DEAD END", icon: "\ud83d\udeab" },
+  solution:     { fill: "#22c55e", label: "SOLUTION", icon: "\u2705" },
+};
+
+const EDGE_CLR = {
+  led_to: "#94a3b8", caused: "#f87171", triggered_pivot: "#f59e0b",
+  informed: "#60a5fa", enabled: "#34d399", revealed: "#a78bfa",
+  refined: "#94a3b8", contradicted: "#ef4444",
+};
+
+// Stats
+const metaEl = document.getElementById('meta');
+metaEl.textContent =
+  NODES.length + ' nodes \u00b7 ' + EDGES.length + ' edges \u00b7 ' + PIVOTS.length + ' pivots';
+
+// Legend
+const legend = document.getElementById('legend');
+Object.entries(TYPE_CFG).forEach(function(entry) {
+  var t = entry[0], c = entry[1];
+  var d = document.createElement('div');
+  d.className = 'legend-item';
+  d.innerHTML = '<span>' + c.icon + '</span><span style="color:' + c.fill + '">' + c.label + '</span>';
+  legend.appendChild(d);
+});
+
+// Layout
+var W = 240, H = 120, PX = 80, PY = 60;
+var levels = {};
+var visited = {};
+var roots = {};
+NODES.forEach(function(n) { roots[n.node_id] = true; });
+EDGES.forEach(function(e) { delete roots[e.target_id]; });
+
+function assignLevel(id, lv) {
+  if (visited[id] && (levels[id] || 0) >= lv) return;
+  visited[id] = true;
+  levels[id] = Math.max(levels[id] || 0, lv);
+  EDGES.filter(function(e) { return e.source_id === id; }).forEach(function(e) {
+    assignLevel(e.target_id, lv + 1);
+  });
+}
+Object.keys(roots).forEach(function(r) { assignLevel(r, 0); });
+NODES.forEach(function(n) { if (!(n.node_id in levels)) levels[n.node_id] = 0; });
+
+var byLevel = {};
+NODES.forEach(function(n) {
+  var l = levels[n.node_id];
+  if (!byLevel[l]) byLevel[l] = [];
+  byLevel[l].push(n.node_id);
+});
+
+var pos = {};
+Object.entries(byLevel).forEach(function(entry) {
+  var lv = entry[0], ids = entry[1];
+  var tw = ids.length * W + (ids.length - 1) * PX;
+  var sx = -tw / 2 + W / 2;
+  ids.forEach(function(id, i) {
+    pos[id] = { x: sx + i * (W + PX), y: Number(lv) * (H + PY) };
+  });
+});
+
+// SVG setup
+var svg = document.getElementById('canvas');
+var ns = 'http://www.w3.org/2000/svg';
+var vb = calcViewBox();
+function calcViewBox() {
+  var xs = Object.values(pos).map(function(p) { return p.x; });
+  var ys = Object.values(pos).map(function(p) { return p.y; });
+  return {
+    x: Math.min.apply(null, xs) - W - 40,
+    y: Math.min.apply(null, ys) - 80,
+    w: Math.max.apply(null, xs) - Math.min.apply(null, xs) + W * 2 + 80,
+    h: Math.max.apply(null, ys) - Math.min.apply(null, ys) + H + 160
+  };
+}
+function setVB() {
+  svg.setAttribute('viewBox', vb.x + ' ' + vb.y + ' ' + vb.w + ' ' + vb.h);
+}
+setVB();
+
+// Defs (arrowheads)
+var defs = document.createElementNS(ns, 'defs');
+Object.entries(EDGE_CLR).forEach(function(entry) {
+  var rel = entry[0], clr = entry[1];
+  var m = document.createElementNS(ns, 'marker');
+  m.setAttribute('id', 'a-' + rel);
+  m.setAttribute('viewBox', '0 0 10 7');
+  m.setAttribute('refX', '10'); m.setAttribute('refY', '3.5');
+  m.setAttribute('markerWidth', '8'); m.setAttribute('markerHeight', '6');
+  m.setAttribute('orient', 'auto-start-reverse');
+  var p = document.createElementNS(ns, 'path');
+  p.setAttribute('d', 'M 0 0 L 10 3.5 L 0 7 z');
+  p.setAttribute('fill', clr);
+  m.appendChild(p); defs.appendChild(m);
+});
+svg.appendChild(defs);
+
+// Draw edges with animation
+EDGES.forEach(function(e, i) {
+  var f = pos[e.source_id], t = pos[e.target_id];
+  if (!f || !t) return;
+  var clr = EDGE_CLR[e.relationship] || '#475569';
+  var my = (f.y + H / 2 + t.y - 10) / 2;
+
+  var g = document.createElementNS(ns, 'g');
+  g.classList.add('edge');
+
+  var path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', 'M ' + f.x + ' ' + (f.y + H / 2) +
+    ' C ' + f.x + ' ' + my + ', ' + t.x + ' ' + my + ', ' + t.x + ' ' + (t.y - 10));
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', clr);
+  path.setAttribute('stroke-width', '1.5');
+  path.setAttribute('opacity', '0.4');
+  path.setAttribute('marker-end', 'url(#a-' + e.relationship + ')');
+  path.setAttribute('stroke-dasharray', '500');
+  path.setAttribute('stroke-dashoffset', '500');
+  path.style.animation = 'drawEdge 0.6s ease-out ' + (i * 0.03) + 's forwards';
+  if (e.relationship === 'informed') path.setAttribute('stroke-dasharray', '6,4');
+
+  g.addEventListener('mouseenter', function() {
+    path.setAttribute('opacity', '1');
+    path.setAttribute('stroke-width', '3');
+    var lbl = g.querySelector('.edge-label');
+    if (!lbl) {
+      lbl = document.createElementNS(ns, 'text');
+      lbl.classList.add('edge-label');
+      lbl.setAttribute('x', (f.x + t.x) / 2);
+      lbl.setAttribute('y', my - 8);
+      lbl.setAttribute('text-anchor', 'middle');
+      lbl.setAttribute('font-size', '10');
+      lbl.setAttribute('fill', clr);
+      lbl.setAttribute('font-weight', '600');
+      lbl.setAttribute('font-family', 'JetBrains Mono, monospace');
+      lbl.textContent = e.relationship;
+      g.appendChild(lbl);
+    }
+  });
+  g.addEventListener('mouseleave', function() {
+    path.setAttribute('opacity', '0.4');
+    path.setAttribute('stroke-width', '1.5');
+    var lbl = g.querySelector('.edge-label');
+    if (lbl) lbl.remove();
+  });
+
+  g.appendChild(path);
+  svg.appendChild(g);
+});
+
+// Draw nodes with animation
+NODES.forEach(function(n, idx) {
+  var p = pos[n.node_id];
+  if (!p) return;
+  var cfg = TYPE_CFG[n.node_type] || TYPE_CFG.context_load;
+  var isPivot = PIVOTS.indexOf(n.node_id) !== -1;
+
+  var g = document.createElementNS(ns, 'g');
+  g.classList.add('node');
+  g.style.opacity = '0';
+  g.style.animation = 'fadeInNode 0.4s ease-out ' + (idx * 0.04) + 's forwards';
+  g.addEventListener('click', function() { showDetail(n); });
+
+  // Pivot outline
+  if (isPivot) {
+    var outline = document.createElementNS(ns, 'rect');
+    outline.setAttribute('x', p.x - W / 2 - 4);
+    outline.setAttribute('y', p.y - 4);
+    outline.setAttribute('width', W + 8);
+    outline.setAttribute('height', H + 8);
+    outline.setAttribute('rx', '12');
+    outline.setAttribute('fill', 'none');
+    outline.setAttribute('stroke', '#f59e0b');
+    outline.setAttribute('stroke-width', '2');
+    outline.setAttribute('stroke-dasharray', '8,4');
+    outline.setAttribute('opacity', '0.6');
+    g.appendChild(outline);
+  }
+
+  // Main rect
+  var rect = document.createElementNS(ns, 'rect');
+  rect.setAttribute('x', p.x - W / 2);
+  rect.setAttribute('y', p.y);
+  rect.setAttribute('width', W);
+  rect.setAttribute('height', H);
+  rect.setAttribute('rx', '8');
+  rect.setAttribute('fill', '#1e293b');
+  rect.setAttribute('stroke', cfg.fill + '66');
+  rect.setAttribute('stroke-width', '1');
+  g.appendChild(rect);
+
+  // Type badge bg
+  var badgeBg = document.createElementNS(ns, 'rect');
+  badgeBg.setAttribute('x', p.x - W / 2 + 8);
+  badgeBg.setAttribute('y', p.y + 8);
+  badgeBg.setAttribute('width', cfg.label.length * 7.5 + 28);
+  badgeBg.setAttribute('height', '20');
+  badgeBg.setAttribute('rx', '4');
+  badgeBg.setAttribute('fill', cfg.fill + '22');
+  g.appendChild(badgeBg);
+
+  // Type badge text
+  var badge = document.createElementNS(ns, 'text');
+  badge.setAttribute('x', p.x - W / 2 + 14);
+  badge.setAttribute('y', p.y + 22);
+  badge.setAttribute('font-size', '9');
+  badge.setAttribute('font-weight', '700');
+  badge.setAttribute('fill', cfg.fill);
+  badge.setAttribute('font-family', 'JetBrains Mono, monospace');
+  badge.setAttribute('letter-spacing', '0.08em');
+  badge.textContent = cfg.icon + ' ' + cfg.label;
+  g.appendChild(badge);
+
+  // Confidence
+  var conf = document.createElementNS(ns, 'text');
+  conf.setAttribute('x', p.x + W / 2 - 12);
+  conf.setAttribute('y', p.y + 22);
+  conf.setAttribute('font-size', '9');
+  conf.setAttribute('fill', '#94a3b8');
+  conf.setAttribute('text-anchor', 'end');
+  conf.setAttribute('font-family', 'JetBrains Mono, monospace');
+  conf.textContent = Math.round(n.confidence * 100) + '%';
+  g.appendChild(conf);
+
+  // Summary (foreignObject for text wrapping)
+  var fo = document.createElementNS(ns, 'foreignObject');
+  fo.setAttribute('x', p.x - W / 2 + 8);
+  fo.setAttribute('y', p.y + 34);
+  fo.setAttribute('width', W - 16);
+  fo.setAttribute('height', H - 50);
+  var div = document.createElement('div');
+  div.style.cssText = 'font-size:10px;color:#cbd5e1;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;font-family:JetBrains Mono,monospace;';
+  div.textContent = n.summary;
+  fo.appendChild(div);
+  g.appendChild(fo);
+
+  // Node ID
+  var nid = document.createElementNS(ns, 'text');
+  nid.setAttribute('x', p.x + W / 2 - 12);
+  nid.setAttribute('y', p.y + H - 8);
+  nid.setAttribute('font-size', '8');
+  nid.setAttribute('fill', '#475569');
+  nid.setAttribute('text-anchor', 'end');
+  nid.setAttribute('font-family', 'JetBrains Mono, monospace');
+  nid.textContent = n.node_id;
+  g.appendChild(nid);
+
+  svg.appendChild(g);
+});
+
+// Pan & zoom
+var dragging = false, ds = null;
+svg.addEventListener('mousedown', function(e) {
+  if (e.target.closest('.node')) return;
+  dragging = true;
+  ds = { x: e.clientX, y: e.clientY, vb: { x: vb.x, y: vb.y, w: vb.w, h: vb.h } };
+  svg.style.cursor = 'grabbing';
+});
+svg.addEventListener('mousemove', function(e) {
+  if (!dragging) return;
+  var dx = (e.clientX - ds.x) * (vb.w / svg.clientWidth);
+  var dy = (e.clientY - ds.y) * (vb.h / svg.clientHeight);
+  vb.x = ds.vb.x - dx;
+  vb.y = ds.vb.y - dy;
+  setVB();
+});
+svg.addEventListener('mouseup', function() { dragging = false; svg.style.cursor = 'grab'; });
+svg.addEventListener('mouseleave', function() { dragging = false; svg.style.cursor = 'grab'; });
+svg.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  var s = e.deltaY > 0 ? 1.1 : 0.9;
+  vb.x += vb.w * (1 - s) / 2;
+  vb.y += vb.h * (1 - s) / 2;
+  vb.w *= s; vb.h *= s;
+  setVB();
+}, { passive: false });
+svg.style.cursor = 'grab';
+
+// Detail panel
+function showDetail(n) {
+  var cfg = TYPE_CFG[n.node_type] || TYPE_CFG.context_load;
+  var isPivot = PIVOTS.indexOf(n.node_id) !== -1;
+  document.getElementById('detail-content').innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">' +
+    '<span style="font-size:18px">' + cfg.icon + '</span>' +
+    '<span class="type-badge" style="color:' + cfg.fill + '">' + cfg.label + '</span>' +
+    '<span style="font-size:11px;color:#64748b">(' + n.node_id + ')</span>' +
+    (isPivot ? '<span class="pivot-badge">PIVOT</span>' : '') +
+    '</div>' +
+    '<div class="summary">' + n.summary + '</div>' +
+    '<div class="evidence"><span class="evidence-label">Evidence: </span>' + (n.evidence || 'N/A') + '</div>' +
+    '<div class="meta-row">' +
+    '<span>Messages: ' + n.message_range[0] + '\u2013' + n.message_range[1] + '</span>' +
+    '<span>Confidence: ' + Math.round(n.confidence * 100) + '%</span>' +
+    '</div>';
+  document.getElementById('detail').classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.remove('visible');
+}
+</script>
+</body>
+</html>

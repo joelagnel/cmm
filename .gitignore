@@ -3,4 +3,9 @@ __pycache__/
 *.pyo
 .env
 *.sqlite3
+.DS_Store
+.Rhistory
 data/memory_store/
+cognitive-memory/data/memory_store/
+cognitive-memory/data/eval/
+.cognitive/

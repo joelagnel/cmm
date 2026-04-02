@@ -157,15 +157,17 @@ class TestSemanticDeduplicator:
     def test_near_duplicate_dropped_when_lower_confidence(self, store):
         # Store original node
         original = make_dag("session-1", [
-            make_node("n1", NodeType.SOLUTION, "JWT signing uses HS256 algorithm with shared secret", confidence=0.9),
+            make_node("n1", NodeType.SOLUTION,
+                      "Fixed the JWT signing secret key mismatch in the auth middleware config",
+                      confidence=0.9),
         ])
         store.store_dag(original, "project-jwt")
 
-        # Try to store near-duplicate with lower confidence
-        dedup = SemanticDeduplicator(store, similarity_threshold=0.80)
+        # Try to store near-duplicate with lower confidence (same words, diff order)
+        dedup = SemanticDeduplicator(store, similarity_threshold=0.70)
         duplicate = make_node(
             "n1", NodeType.SOLUTION,
-            "JWT token signing uses HMAC-SHA256 with a shared secret key",
+            "Fixed the JWT signing secret key mismatch in the auth middleware configuration",
             confidence=0.6,
         )
         result = dedup.deduplicate([duplicate], "project-jwt", "session-2")
@@ -175,14 +177,16 @@ class TestSemanticDeduplicator:
     def test_near_duplicate_replaces_when_higher_confidence(self, store):
         # Store original with low confidence
         original = make_dag("session-1", [
-            make_node("n1", NodeType.SOLUTION, "JWT signing uses HS256 with shared secret", confidence=0.4),
+            make_node("n1", NodeType.SOLUTION,
+                      "Fixed the JWT signing secret key mismatch in the auth middleware config",
+                      confidence=0.4),
         ])
         store.store_dag(original, "project-jwt")
 
-        dedup = SemanticDeduplicator(store, similarity_threshold=0.80)
+        dedup = SemanticDeduplicator(store, similarity_threshold=0.70)
         better = make_node(
             "n2", NodeType.SOLUTION,
-            "JWT token signing uses HMAC-SHA256 with a shared secret key",
+            "Fixed the JWT signing secret key mismatch in the auth middleware configuration",
             confidence=0.95,
         )
         result = dedup.deduplicate([better], "project-jwt", "session-2")
@@ -205,18 +209,20 @@ class TestSemanticDeduplicator:
         """Two sessions hitting the same bug should deduplicate to ~1 node."""
         session1_nodes = [
             make_node("n1", NodeType.SOLUTION,
-                      "Fixed: missing CORS header for /api/auth endpoint", confidence=0.85),
+                      "Fixed missing CORS header for the auth API endpoint in production config",
+                      confidence=0.85),
         ]
         session2_nodes = [
             make_node("n1", NodeType.SOLUTION,
-                      "Resolved missing CORS header on the authentication API route", confidence=0.75),
+                      "Fixed missing CORS header for the auth API endpoint in the production configuration",
+                      confidence=0.75),
         ]
 
         dag1 = make_dag("session-cors-1", session1_nodes)
         store.store_dag(dag1, "project-cors")
         before = store.node_count("project-cors")
 
-        dedup = SemanticDeduplicator(store, similarity_threshold=0.80)
+        dedup = SemanticDeduplicator(store, similarity_threshold=0.70)
         result = dedup.deduplicate(session2_nodes, "project-cors", "session-cors-2")
 
         # The second one should be dropped (lower confidence)

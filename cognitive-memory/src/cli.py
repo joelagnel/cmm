@@ -7,10 +7,220 @@ def main():
     """Cognitive Memory Manager — persistent cross-platform memory for AI coding agents."""
 
 
+# ── cmm init ──────────────────────────────────────────────────────────────────
+
+@main.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--store-dir", default=None, help="ChromaDB store path (default: ~/.cognitive-memory/store)")
+def init(target, store_dir):
+    """Initialize .cognitive/ folder for a project.
+
+    Creates manifest.json, config.json, llms.txt, and cached_profile.md
+    in the target project directory. Derives project ID automatically
+    from the repo name + README content hash.
+    """
+    from pathlib import Path
+    from rich.console import Console
+
+    from src.discovery.project import CognitiveProject
+    from src.discovery.llms_txt import generate_llms_txt
+
+    console = Console()
+    project_dir = Path(target).resolve()
+
+    # Check if already initialized
+    cognitive_dir = project_dir / ".cognitive"
+    if (cognitive_dir / "manifest.json").exists():
+        proj = CognitiveProject.load(project_dir)
+        console.print(f"[yellow]Already initialized:[/yellow] {proj.project_id}")
+        console.print(f"  .cognitive/ exists at {cognitive_dir}")
+        return
+
+    proj = CognitiveProject.init(project_dir, store_path=store_dir)
+
+    # Generate initial llms.txt (no profile yet)
+    llms_content = generate_llms_txt(
+        project_name=proj.name,
+        project_description=proj.description,
+        profile=None,
+        project_dir=project_dir,
+    )
+    proj.llms_txt_path.write_text(llms_content)
+
+    console.print(f"[green]Initialized cognitive memory:[/green]")
+    console.print(f"  Project ID:  [cyan]{proj.project_id}[/cyan]")
+    console.print(f"  Name:        {proj.name}")
+    console.print(f"  Description: {proj.description[:80] or '(none)'}")
+    console.print(f"  Directory:   {cognitive_dir}")
+    console.print()
+    console.print("Created files:")
+    console.print(f"  .cognitive/manifest.json")
+    console.print(f"  .cognitive/config.json")
+    console.print(f"  .cognitive/llms.txt")
+    console.print(f"  .cognitive/cached_profile.md")
+    console.print()
+    console.print("[dim]Add .cognitive/ to .gitignore if you don't want it tracked.[/dim]")
+
+
+# ── cmm sync ──────────────────────────────────────────────────────────────────
+
+@main.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+def sync(target):
+    """Update cached_profile.md and llms.txt from latest ChromaDB state.
+
+    Reads the current cognitive profile from the store and writes it to
+    .cognitive/cached_profile.md and regenerates .cognitive/llms.txt.
+    """
+    from pathlib import Path
+    from rich.console import Console
+
+    from src.discovery.project import CognitiveProject
+    from src.discovery.llms_txt import generate_llms_txt
+    from src.store.vector_store import MemoryStore
+    from src.delivery.mcp_server import _fmt_profile
+
+    console = Console()
+    project_dir = Path(target).resolve()
+
+    try:
+        proj = CognitiveProject.load(project_dir)
+    except FileNotFoundError:
+        console.print("[red]No .cognitive/ folder found. Run 'cmm init' first.[/red]")
+        return
+
+    store_path = proj.config.get(
+        "store_path",
+        str(Path.home() / ".cognitive-memory" / "store"),
+    )
+    store = MemoryStore(persist_dir=store_path)
+    profile = store.get_profile(proj.project_id)
+    node_count = store.node_count(proj.project_id)
+
+    if profile:
+        # Update cached_profile.md
+        profile_md = _fmt_profile(profile)
+        proj.update_cached_profile(profile_md)
+
+        # Regenerate llms.txt
+        llms_content = generate_llms_txt(
+            project_name=proj.name,
+            project_description=proj.description,
+            profile=profile,
+            project_dir=project_dir,
+        )
+        proj.llms_txt_path.write_text(llms_content)
+
+        console.print(f"[green]Synced:[/green] {proj.project_id}")
+        console.print(f"  Nodes in store:       {node_count}")
+        console.print(f"  Insights:             {len(profile.architectural_insights)}")
+        console.print(f"  Pitfalls:             {len(profile.pitfalls)}")
+        console.print(f"  Diagnostic strategies:{len(profile.diagnostic_strategies)}")
+        console.print(f"  Updated: cached_profile.md, llms.txt")
+    else:
+        console.print(f"[yellow]No profile built for {proj.project_id}.[/yellow]")
+        console.print(f"  Nodes in store: {node_count}")
+        if node_count > 0:
+            console.print("  Run 'cmm consolidate' to build a profile from stored nodes.")
+        else:
+            console.print("  Ingest some sessions first, then consolidate.")
+
+
+# ── cmm status (updated) ─────────────────────────────────────────────────────
+
+@main.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--project", "-p", default=None, help="Override project ID")
+def status(target, project):
+    """Show cognitive memory status for a project."""
+    from pathlib import Path
+    from rich.console import Console
+    from rich.table import Table
+
+    from src.store.vector_store import MemoryStore
+
+    console = Console()
+    project_dir = Path(target).resolve()
+
+    # Try to discover from .cognitive/ first
+    project_id = project
+    store_path = None
+
+    try:
+        from src.discovery.project import CognitiveProject
+        proj = CognitiveProject.load(project_dir)
+        project_id = project_id or proj.project_id
+        store_path = proj.config.get("store_path")
+        console.print(f"[green]Project:[/green] {proj.name} ({proj.project_id})")
+        console.print(f"  Sessions:  {proj.session_count}")
+        console.print(f"  Last:      {proj.last_session or 'never'}")
+        console.print()
+    except FileNotFoundError:
+        if not project_id:
+            console.print("[red]No .cognitive/ folder found and no --project given.[/red]")
+            console.print("Run 'cmm init' or pass --project/-p.")
+            return
+
+    store_path = store_path or str(Path.home() / ".cognitive-memory" / "store")
+    store = MemoryStore(persist_dir=store_path)
+
+    table = Table(title=f"Memory Store: {project_id}", show_header=True)
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value")
+
+    count = store.node_count(project_id)
+    table.add_row("Stored nodes", str(count))
+
+    profile = store.get_profile(project_id)
+    if profile:
+        table.add_row("Profile sessions", str(profile.session_count))
+        table.add_row("Architectural insights", str(len(profile.architectural_insights)))
+        table.add_row("Pitfalls", str(len(profile.pitfalls)))
+        table.add_row("Diagnostic strategies", str(len(profile.diagnostic_strategies)))
+        table.add_row("Key patterns", str(len(profile.key_patterns)))
+        table.add_row("Last updated", profile.last_updated.strftime("%Y-%m-%d %H:%M"))
+    else:
+        table.add_row("Profile", "[yellow]not built yet[/yellow]")
+
+    console.print(table)
+
+
+# ── cmm hook ──────────────────────────────────────────────────────────────────
+
+@main.group()
+def hook():
+    """Run Claude Code hooks (start/stop)."""
+
+
+@hook.command("start")
+@click.argument("project_dir", default=".", type=click.Path(exists=True))
+def hook_start(project_dir):
+    """Session-start hook: load context from .cognitive/ folder."""
+    from pathlib import Path
+    from src.discovery.hooks import session_start_hook
+
+    output = session_start_hook(Path(project_dir))
+    print(output)
+
+
+@hook.command("stop")
+@click.argument("project_dir", default=".", type=click.Path(exists=True))
+def hook_stop(project_dir):
+    """Session-stop hook: ingest the just-completed session."""
+    import json
+    from pathlib import Path
+    from src.discovery.hooks import session_stop_hook
+
+    result = session_stop_hook(Path(project_dir))
+    print(json.dumps(result, indent=2))
+
+
+# ── Existing commands (unchanged) ─────────────────────────────────────────────
+
 @main.command()
 @click.argument("sessions", nargs=-1, required=True, type=click.Path(exists=True))
 @click.option("--project", "-p", required=True, help="Project ID")
-@click.option("--store-dir", default=None, help="Memory store directory (default: ~/.cognitive-memory/store)")
+@click.option("--store-dir", default=None, help="Memory store directory")
 @click.option("--build-profile", is_flag=True, help="Build cognitive profile after ingestion")
 @click.option("--no-llm", is_flag=True, help="Use heuristic extraction (no API calls)")
 def ingest(sessions, project, store_dir, build_profile, no_llm):
@@ -19,12 +229,9 @@ def ingest(sessions, project, store_dir, build_profile, no_llm):
     import sys
     from pathlib import Path
 
-    # Defer import to avoid loading heavy deps at CLI parse time
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from scripts.ingest import main as ingest_main
 
-    # Re-invoke the ingest script's async main with the same arguments
-    import sys
     sys.argv = ["ingest"] + list(sessions) + ["-p", project]
     if store_dir:
         sys.argv += ["--store-dir", store_dir]
@@ -32,21 +239,6 @@ def ingest(sessions, project, store_dir, build_profile, no_llm):
         sys.argv.append("--build-profile")
     if no_llm:
         sys.argv.append("--no-llm")
-    asyncio.run(ingest_main())
-
-
-@main.command()
-@click.option("--project", "-p", required=True, help="Project ID")
-@click.option("--store-dir", default=None, help="Memory store directory")
-def status(project, store_dir):
-    """Show memory store status for a project."""
-    import sys
-    sys.argv = ["ingest", "--status", "-p", project]
-    if store_dir:
-        sys.argv += ["--store-dir", store_dir]
-
-    import asyncio
-    from scripts.ingest import main as ingest_main
     asyncio.run(ingest_main())
 
 
@@ -87,10 +279,10 @@ def visualize(project, store_dir, output, fmt):
 
 
 @main.command()
-@click.option("--projects-dir", default=None, help="Claude Code projects directory (default: ~/.claude/projects/)")
+@click.option("--projects-dir", default=None, help="Claude Code projects directory")
 @click.option("--store-dir", default=None, help="Memory store directory")
-@click.option("--poll-interval", type=float, default=10.0, help="Seconds between polls (default: 10)")
-@click.option("--min-age", type=float, default=30.0, help="Min file age before processing (default: 30s)")
+@click.option("--poll-interval", type=float, default=10.0, help="Seconds between polls")
+@click.option("--min-age", type=float, default=30.0, help="Min file age before processing")
 @click.option("--no-auto-ingest", is_flag=True, help="Only detect, don't auto-ingest")
 def watch(projects_dir, store_dir, poll_interval, min_age, no_auto_ingest):
     """Watch for new Claude Code sessions and auto-ingest them."""
@@ -99,7 +291,6 @@ def watch(projects_dir, store_dir, poll_interval, min_age, no_auto_ingest):
     from src.ingestion.watcher import SessionWatcher
 
     store_path = store_dir or str(Path(__file__).parent.parent / "data" / "memory_store")
-
     watcher = SessionWatcher(
         watch_dir=projects_dir,
         store_path=store_path,

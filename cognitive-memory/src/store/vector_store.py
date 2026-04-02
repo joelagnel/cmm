@@ -1,32 +1,39 @@
-"""Vector store backed by ChromaDB with sentence-transformer embeddings."""
+"""Vector store backed by ChromaDB with OpenAI text-embedding-3-small embeddings."""
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 
 from ..schemas.memory import CognitiveProfile
 from ..schemas.reasoning import ReasoningDAG, ReasoningNode
 
-_DEFAULT_MODEL = "all-MiniLM-L6-v2"
+_DEFAULT_MODEL = "text-embedding-3-small"
 _COLLECTION_NODES = "reasoning_nodes"
 _COLLECTION_PROFILES = "cognitive_profiles"
+_EMBED_BATCH_SIZE = 100  # OpenAI supports up to 2048 inputs per request
 
 
 class MemoryStore:
     """Persistent vector store for reasoning nodes and cognitive profiles."""
 
-    def __init__(self, persist_dir: str | Path, embedding_model: str = _DEFAULT_MODEL):
-        self.persist_dir = Path(persist_dir)
-        self.persist_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(
+        self,
+        persist_dir: str | Path,
+        embedding_model: str = _DEFAULT_MODEL,
+        api_key: str | None = None,
+    ):
+        self._persist_dir = str(persist_dir)
+        Path(persist_dir).mkdir(parents=True, exist_ok=True)
 
         self.client = chromadb.PersistentClient(
-            path=str(self.persist_dir),
+            path=self._persist_dir,
             settings=Settings(anonymized_telemetry=False),
         )
         self.nodes_col = self.client.get_or_create_collection(
@@ -37,12 +44,27 @@ class MemoryStore:
             name=_COLLECTION_PROFILES,
             metadata={"hnsw:space": "cosine"},
         )
-        self.embedder = SentenceTransformer(embedding_model)
+
+        self._embedding_model = embedding_model
+        self._openai = OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"))
 
     # ── Embedding ──────────────────────────────────────────────────────────
 
     def embed(self, texts: list[str]) -> list[list[float]]:
-        return self.embedder.encode(texts, convert_to_numpy=True).tolist()
+        """Embed texts using OpenAI text-embedding-3-small."""
+        if not texts:
+            return []
+
+        all_embeddings = []
+        for i in range(0, len(texts), _EMBED_BATCH_SIZE):
+            batch = texts[i : i + _EMBED_BATCH_SIZE]
+            response = self._openai.embeddings.create(
+                model=self._embedding_model,
+                input=batch,
+            )
+            all_embeddings.extend([item.embedding for item in response.data])
+
+        return all_embeddings
 
     # ── Store DAG nodes ────────────────────────────────────────────────────
 

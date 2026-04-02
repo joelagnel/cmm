@@ -5,6 +5,10 @@ This module provides the same functionality as the MCP server tools but as
 direct CLI commands, so they can be invoked from Claude Code skill files
 without requiring an MCP server.
 
+Every invocation is automatically logged to data/eval/interactions.db
+for evaluation metrics. Logging is fail-safe — if it breaks, retrieval
+still works.
+
 Usage:
     python -m src.delivery.cli_query profile
     python -m src.delivery.cli_query pitfalls
@@ -16,6 +20,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 # Ensure project root is importable
@@ -36,45 +41,113 @@ def _store(args) -> MemoryStore:
     return MemoryStore(persist_dir=args.store_dir)
 
 
+def _logger():
+    """Get the interaction logger. Returns None on failure."""
+    try:
+        from src.evaluation.logger import InteractionLogger
+        return InteractionLogger()
+    except Exception:
+        return None
+
+
+def _log(logger, skill, project_id, query_text=None, results=None, response_time_ms=0, output=""):
+    """Log an invocation. Fails silently."""
+    if logger is None:
+        return
+    try:
+        logger.log_invocation(
+            skill=skill,
+            project_id=project_id,
+            query_text=query_text,
+            results=results,
+            response_time_ms=response_time_ms,
+            raw_output_len=len(output),
+        )
+    except Exception:
+        pass
+
+
 def cmd_profile(args):
+    logger = _logger()
+    t0 = time.perf_counter()
+
     store = _store(args)
     profile = store.get_profile(args.project)
+
+    elapsed = (time.perf_counter() - t0) * 1000
+
     if profile is None:
         count = store.node_count(args.project)
         if count == 0:
-            print(f"No cognitive profile found for `{args.project}`. Run the ingest pipeline first.")
+            output = f"No cognitive profile found for `{args.project}`. Run the ingest pipeline first."
         else:
-            print(f"No profile built yet for `{args.project}` ({count} nodes stored).")
+            output = f"No profile built yet for `{args.project}` ({count} nodes stored)."
+        _log(logger, "cognitive-profile", args.project, response_time_ms=elapsed, output=output)
+        print(output)
         return
-    print(_fmt_profile(profile))
+
+    output = _fmt_profile(profile)
+    _log(logger, "cognitive-profile", args.project, response_time_ms=elapsed, output=output)
+    print(output)
 
 
 def cmd_pitfalls(args):
+    logger = _logger()
+    t0 = time.perf_counter()
+
     store = _store(args)
     profile = store.get_profile(args.project)
+
+    elapsed = (time.perf_counter() - t0) * 1000
+
     if profile is None:
-        print(f"No profile found for `{args.project}`. Run the ingest pipeline first.")
+        output = f"No profile found for `{args.project}`. Run the ingest pipeline first."
+        _log(logger, "pitfalls", args.project, response_time_ms=elapsed, output=output)
+        print(output)
         return
-    print(_fmt_pitfalls(profile.pitfalls))
+
+    output = _fmt_pitfalls(profile.pitfalls)
+    _log(logger, "pitfalls", args.project, response_time_ms=elapsed, output=output)
+    print(output)
 
 
 def cmd_search(args):
+    logger = _logger()
+    t0 = time.perf_counter()
+
     store = _store(args)
     results = store.search(args.query, project_id=args.project, top_k=args.top_k)
-    print(_fmt_search_results(results))
+
+    elapsed = (time.perf_counter() - t0) * 1000
+
+    output = _fmt_search_results(results)
+    _log(logger, "search-memory", args.project, query_text=args.query,
+         results=results, response_time_ms=elapsed, output=output)
+    print(output)
 
 
 def cmd_diagnose(args):
+    logger = _logger()
+    t0 = time.perf_counter()
+
     store = _store(args)
     profile = store.get_profile(args.project)
+
     if profile is None:
-        print(f"No profile found for `{args.project}`. Run the ingest pipeline first.")
+        elapsed = (time.perf_counter() - t0) * 1000
+        output = f"No profile found for `{args.project}`. Run the ingest pipeline first."
+        _log(logger, "diagnose", args.project, query_text=args.problem,
+             response_time_ms=elapsed, output=output)
+        print(output)
         return
 
     if not profile.diagnostic_strategies:
         results = store.search(args.problem, project_id=args.project, top_k=3)
-        print("No structured diagnostic strategies yet. Relevant past reasoning:\n")
-        print(_fmt_search_results(results))
+        elapsed = (time.perf_counter() - t0) * 1000
+        output = "No structured diagnostic strategies yet. Relevant past reasoning:\n\n" + _fmt_search_results(results)
+        _log(logger, "diagnose", args.project, query_text=args.problem,
+             results=results, response_time_ms=elapsed, output=output)
+        print(output)
         return
 
     desc_lower = args.problem.lower()
@@ -83,7 +156,11 @@ def cmd_diagnose(args):
         key=lambda s: sum(1 for w in desc_lower.split() if w in s.trigger.lower()),
         reverse=True,
     )
-    print(_fmt_strategies(ranked[:3], args.problem))
+    elapsed = (time.perf_counter() - t0) * 1000
+    output = _fmt_strategies(ranked[:3], args.problem)
+    _log(logger, "diagnose", args.project, query_text=args.problem,
+         response_time_ms=elapsed, output=output)
+    print(output)
 
 
 def main():

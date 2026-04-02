@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/sazankhalid/Downloads/cmm/cognitive-memory/.venv/bin/python -m src.cli hook stop /Users/sazankhalid/Downloads/supply-chain-tracker",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
