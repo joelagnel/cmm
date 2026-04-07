@@ -641,6 +641,7 @@ class MemoryStore:
         docs = []
         embs = []
         metas = []
+        now = datetime.now(timezone.utc).isoformat()
         for n in nodes:
             ids.append(n["id"])
             docs.append(n["summary"])
@@ -649,7 +650,11 @@ class MemoryStore:
             # Force project_id to match local view (team nodes may have a different one)
             if meta.get("scope") != "team":
                 meta["project_id"] = project_id
-            meta.setdefault("pushed_at", datetime.now(timezone.utc).isoformat())
+            # Always stamp pushed_at — pulled nodes came from shared, don't bounce
+            # back on next push. setdefault is wrong here because pushed_at may
+            # already be present as an empty string from prior writes.
+            if not meta.get("pushed_at"):
+                meta["pushed_at"] = now
             metas.append(meta)
         self.nodes_col_local.upsert(ids=ids, embeddings=embs, metadatas=metas, documents=docs)
         return len(ids)
