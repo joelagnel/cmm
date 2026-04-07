@@ -36,6 +36,14 @@ _DEFAULT_CONFIG = {
     "similarity_threshold": 0.85,
     "max_search_results": 5,
     "warm_extraction_only": True,
+    # Phase 3-6: shared-store sync
+    "shared_store_path": None,
+    "local_store_path": None,        # null = use default ~/.cognitive-memory/store
+    "mode": "local",                  # "local" or "shared"
+    "auto_push": False,
+    "context_fill_ratio": 0.45,
+    "developer_name": None,
+    "team_id": None,
 }
 
 

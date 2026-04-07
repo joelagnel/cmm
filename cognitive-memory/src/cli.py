@@ -11,15 +11,19 @@ def main():
 
 @main.command()
 @click.argument("target", default=".", type=click.Path(exists=True))
-@click.option("--store-dir", default=None, help="ChromaDB store path (default: ~/.cognitive-memory/store)")
-def init(target, store_dir):
-    """Initialize .cognitive/ folder for a project.
+@click.option("--store-dir", default=None, help="Local ChromaDB store path")
+@click.option("--shared", "shared_path", default=None, help="Shared team store path (enables shared mode)")
+@click.option("--developer", default=None, help="Your name (for sync attribution)")
+@click.option("--team-id", default=None, help="Team identifier")
+def init(target, store_dir, shared_path, developer, team_id):
+    """Initialize cognitive memory for a project.
 
-    Creates manifest.json, config.json, llms.txt, and cached_profile.md
-    in the target project directory. Derives project ID automatically
-    from the repo name + README content hash.
+    Creates the .cognitive/ folder. With --shared, registers a team store
+    path and immediately runs cmm pull to populate the local cache from
+    existing approved team memories.
     """
     from pathlib import Path
+    import os
     from rich.console import Console
 
     from src.discovery.project import CognitiveProject
@@ -28,17 +32,39 @@ def init(target, store_dir):
     console = Console()
     project_dir = Path(target).resolve()
 
-    # Check if already initialized
     cognitive_dir = project_dir / ".cognitive"
     if (cognitive_dir / "manifest.json").exists():
         proj = CognitiveProject.load(project_dir)
         console.print(f"[yellow]Already initialized:[/yellow] {proj.project_id}")
         console.print(f"  .cognitive/ exists at {cognitive_dir}")
+        # If --shared was passed on a re-init, still update the config
+        if shared_path or developer or team_id:
+            if shared_path:
+                proj.config["shared_store_path"] = shared_path
+                proj.config["mode"] = "shared"
+            if developer:
+                proj.config["developer_name"] = developer
+            if team_id:
+                proj.config["team_id"] = team_id
+            proj.save_config()
+            console.print(f"  [green]Updated config[/green]")
         return
 
     proj = CognitiveProject.init(project_dir, store_path=store_dir)
 
-    # Generate initial llms.txt (no profile yet)
+    # Stamp shared-mode config fields
+    if shared_path:
+        proj.config["shared_store_path"] = shared_path
+        proj.config["mode"] = "shared"
+    if developer:
+        proj.config["developer_name"] = developer
+    if team_id:
+        proj.config["team_id"] = team_id
+    if store_dir:
+        proj.config["local_store_path"] = store_dir
+    proj.save_config()
+
+    # Generate initial llms.txt
     llms_content = generate_llms_txt(
         project_name=proj.name,
         project_description=proj.description,
@@ -52,14 +78,72 @@ def init(target, store_dir):
     console.print(f"  Name:        {proj.name}")
     console.print(f"  Description: {proj.description[:80] or '(none)'}")
     console.print(f"  Directory:   {cognitive_dir}")
+    if shared_path:
+        console.print(f"  Mode:        [magenta]shared[/magenta]")
+        console.print(f"  Shared:      [cyan]{shared_path}[/cyan]")
+    if developer:
+        console.print(f"  Developer:   [cyan]{developer}[/cyan]")
     console.print()
     console.print("Created files:")
     console.print(f"  .cognitive/manifest.json")
     console.print(f"  .cognitive/config.json")
     console.print(f"  .cognitive/llms.txt")
     console.print(f"  .cognitive/cached_profile.md")
+
+    # If shared mode, immediately pull approved nodes from shared store
+    if shared_path:
+        console.print()
+        console.print("[bold]Pulling existing team memories...[/bold]")
+        try:
+            from src.store.vector_store import MemoryStore
+            from src.sync.sync import Syncer
+
+            local_path = store_dir or str(Path.home() / ".cognitive-memory" / "store")
+            store = MemoryStore(local_path=local_path, shared_path=shared_path)
+            syncer = Syncer(store=store, developer=developer or "")
+            result = syncer.pull(proj.project_id, include_team=True)
+            console.print(f"  [green]✓[/green] {result.summary}")
+
+            # Refresh cached_profile.md from any pulled profile
+            profile = store.get_profile(proj.project_id)
+            if profile:
+                from src.delivery.mcp_server import _fmt_profile
+                proj.update_cached_profile(_fmt_profile(profile))
+                console.print(f"  [green]✓[/green] Cached profile updated")
+        except Exception as e:
+            console.print(f"  [yellow]Pull skipped: {e}[/yellow]")
+
     console.print()
     console.print("[dim]Add .cognitive/ to .gitignore if you don't want it tracked.[/dim]")
+
+
+@main.command()
+@click.argument("node_id")
+@click.option("--scope", type=click.Choice(["project", "team"]), required=True)
+@click.option("--target", default=".", type=click.Path(exists=True))
+@click.option("--project", "-p", default=None)
+def classify(node_id, scope, target, project):
+    """Reclassify a node's scope (project ↔ team)."""
+    from rich.console import Console
+    from src.store.vector_store import MemoryStore
+
+    console = Console()
+    project_id, local_path, shared_path, _ = _resolve_sync_paths(target, project)
+
+    store = MemoryStore(local_path=local_path, shared_path=shared_path)
+    # Look up the node in local first
+    try:
+        existing = store.nodes_col_local.get(ids=[node_id], include=["metadatas"])
+        if not existing["ids"]:
+            console.print(f"[red]Node {node_id} not found in local store.[/red]")
+            return
+        new_meta = dict(existing["metadatas"][0])
+        old_scope = new_meta.get("scope", "project")
+        new_meta["scope"] = scope
+        store.nodes_col_local.update(ids=[node_id], metadatas=[new_meta])
+        console.print(f"[green]✓[/green] Reclassified {node_id}: {old_scope} → {scope}")
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
 
 
 # ── cmm sync ──────────────────────────────────────────────────────────────────
