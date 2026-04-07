@@ -169,7 +169,7 @@ def status(target, project):
     table.add_column("Value")
 
     count = store.node_count(project_id)
-    table.add_row("Stored nodes", str(count))
+    table.add_row("Stored nodes (local)", str(count))
 
     profile = store.get_profile(project_id)
     if profile:
@@ -183,6 +183,30 @@ def status(target, project):
         table.add_row("Profile", "[yellow]not built yet[/yellow]")
 
     console.print(table)
+
+    # ── Sync status (only if shared mode is configured) ────────────
+    _, _, shared_path, developer = _resolve_sync_paths(target, project_id)
+    if shared_path:
+        try:
+            from src.store.vector_store import MemoryStore as MS
+            from src.sync.sync import Syncer
+            shared_store = MS(local_path=store_path, shared_path=shared_path)
+            syncer = Syncer(store=shared_store, developer=developer)
+            sync_status = syncer.status(project_id)
+
+            sync_table = Table(title="Sync Status", show_header=True)
+            sync_table.add_column("Metric", style="cyan")
+            sync_table.add_column("Value")
+            sync_table.add_row("Mode", "[green]shared[/green]")
+            sync_table.add_row("Developer", developer or "[dim]unset[/dim]")
+            sync_table.add_row("Unpushed local nodes", str(sync_status["unpushed_nodes"]))
+            sync_table.add_row("Approved in shared", str(sync_status["shared_approved"]))
+            sync_table.add_row("Pending review", str(sync_status["pending_review"]))
+            sync_table.add_row("Last push", sync_status["last_push"] or "[dim]never[/dim]")
+            sync_table.add_row("Last pull", sync_status["last_pull"] or "[dim]never[/dim]")
+            console.print(sync_table)
+        except Exception as e:
+            console.print(f"[dim]Sync status unavailable: {e}[/dim]")
 
 
 # ── cmm hook ──────────────────────────────────────────────────────────────────
@@ -347,3 +371,109 @@ def install(target, project, store_dir, python):
     python_path = Path(python) if python else CMM_ROOT / ".venv" / "bin" / "python"
     store_path = Path(store_dir) if store_dir else DEFAULT_STORE
     do_install(Path(target), project, store_path, python_path)
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  Phase 4: Push / Pull / Status (shared store sync)
+# ══════════════════════════════════════════════════════════════════════
+
+
+def _resolve_sync_paths(target, project_id_arg):
+    """Resolve (project_id, local_path, shared_path, developer) from
+    .cognitive/config.json + env var overrides."""
+    from pathlib import Path
+    import os, json
+
+    target = Path(target).resolve()
+    cfg_path = target / ".cognitive" / "config.json"
+    cfg = {}
+    if cfg_path.exists():
+        try:
+            cfg = json.loads(cfg_path.read_text())
+        except Exception:
+            cfg = {}
+
+    project_id = project_id_arg or os.environ.get("CMM_PROJECT_ID") or cfg.get("project_id")
+    local_path = (
+        os.environ.get("CMM_STORE_PATH")
+        or cfg.get("local_store_path")
+        or str(Path.home() / ".cognitive-memory" / "store")
+    )
+    shared_path = (
+        os.environ.get("CMM_SHARED_STORE_PATH")
+        or cfg.get("shared_store_path")
+    )
+    developer = (
+        os.environ.get("CMM_DEVELOPER_NAME")
+        or cfg.get("developer_name")
+        or ""
+    )
+    return project_id, local_path, shared_path, developer
+
+
+@main.command()
+@click.option("--project", "-p", default=None, help="Project ID (overrides config)")
+@click.option("--target", default=".", type=click.Path(exists=True), help="Project directory")
+@click.option("--dry-run", is_flag=True, help="Show what would be pushed without pushing")
+def push(project, target, dry_run):
+    """Push new local nodes to the shared staging area for review."""
+    from rich.console import Console
+    from src.store.vector_store import MemoryStore
+    from src.sync.sync import Syncer
+
+    console = Console()
+    project_id, local_path, shared_path, developer = _resolve_sync_paths(target, project)
+
+    if not project_id:
+        console.print("[red]No project ID. Pass --project or set CMM_PROJECT_ID.[/red]")
+        return
+    if not shared_path:
+        console.print("[red]No shared store configured. Set shared_store_path in .cognitive/config.json or CMM_SHARED_STORE_PATH.[/red]")
+        return
+
+    store = MemoryStore(local_path=local_path, shared_path=shared_path)
+    syncer = Syncer(store=store, developer=developer)
+    result = syncer.push(project_id, dry_run=dry_run)
+
+    if result.errors:
+        for e in result.errors:
+            console.print(f"[red]Error: {e}[/red]")
+        return
+
+    if dry_run:
+        console.print(f"[yellow]DRY RUN[/yellow] would push [cyan]{result.pushed}[/cyan] nodes")
+    else:
+        console.print(f"[green]✓[/green] {result.summary}")
+        console.print(f"  Reviewers can run [cyan]cmm review --project {project_id}[/cyan]")
+
+
+@main.command()
+@click.option("--project", "-p", default=None, help="Project ID (overrides config)")
+@click.option("--target", default=".", type=click.Path(exists=True), help="Project directory")
+@click.option("--no-team", is_flag=True, help="Skip team-scope nodes")
+def pull(project, target, no_team):
+    """Pull approved nodes from the shared store into the local cache."""
+    from rich.console import Console
+    from src.store.vector_store import MemoryStore
+    from src.sync.sync import Syncer
+
+    console = Console()
+    project_id, local_path, shared_path, developer = _resolve_sync_paths(target, project)
+
+    if not project_id:
+        console.print("[red]No project ID. Pass --project or set CMM_PROJECT_ID.[/red]")
+        return
+    if not shared_path:
+        console.print("[red]No shared store configured. Set shared_store_path in .cognitive/config.json or CMM_SHARED_STORE_PATH.[/red]")
+        return
+
+    store = MemoryStore(local_path=local_path, shared_path=shared_path)
+    syncer = Syncer(store=store, developer=developer)
+    result = syncer.pull(project_id, include_team=not no_team)
+
+    if result.errors:
+        for e in result.errors:
+            console.print(f"[red]Error: {e}[/red]")
+        return
+
+    console.print(f"[green]✓[/green] {result.summary}")
