@@ -51,10 +51,12 @@ def _logger():
 
 
 def _log(logger, skill, project_id, query_text=None, results=None, response_time_ms=0, output=""):
-    """Log an invocation. Fails silently."""
+    """Log an invocation with the real session message count. Fails silently."""
     if logger is None:
         return
     try:
+        from src.evaluation.logger import InteractionLogger
+        msg_idx = InteractionLogger.count_session_messages()
         logger.log_invocation(
             skill=skill,
             project_id=project_id,
@@ -62,6 +64,7 @@ def _log(logger, skill, project_id, query_text=None, results=None, response_time
             results=results,
             response_time_ms=response_time_ms,
             raw_output_len=len(output),
+            estimated_message_index=msg_idx,
         )
     except Exception:
         pass

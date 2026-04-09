@@ -215,6 +215,21 @@ def session_stop_hook(project_dir: Path | None = None) -> dict:
         except Exception:
             pass  # evaluation is optional — never block ingestion
 
+        # Run profile quality checks (no API key needed)
+        profile_quality = None
+        try:
+            profile = store.get_profile(project.project_id)
+            if profile:
+                from src.evaluation.profile_quality import run_quality_checks
+                total_sessions = project.session_count
+                profile_quality = run_quality_checks(
+                    profile=profile,
+                    project_dir=project.project_dir,
+                    total_sessions=total_sessions,
+                )
+        except Exception:
+            pass  # never block ingestion
+
         return {
             "status": "ingested",
             "session_file": str(session_file),
@@ -224,6 +239,7 @@ def session_stop_hook(project_dir: Path | None = None) -> dict:
             "nodes_merged": len(result.merged),
             "nodes_dropped": len(result.dropped),
             "evaluation": evaluation,
+            "profile_quality": profile_quality,
         }
 
     except Exception as e:

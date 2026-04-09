@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS invocations (
     node_ids        TEXT,
     similarity_scores TEXT,
     response_time_ms REAL DEFAULT 0,
-    raw_output_len  INTEGER DEFAULT 0
+    raw_output_len  INTEGER DEFAULT 0,
+    estimated_message_index INTEGER DEFAULT -1
 );
 
 CREATE TABLE IF NOT EXISTS session_evaluations (
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS session_evaluations (
     pitfalls_surfaced       INTEGER DEFAULT 0,
     pitfalls_avoided        INTEGER DEFAULT 0,
     pivots_after_retrieval  INTEGER DEFAULT 0,
+    harmful_memory_count    INTEGER DEFAULT 0,
     total_dead_ends         INTEGER DEFAULT 0,
     total_pivots            INTEGER DEFAULT 0,
     messages_to_first_solution INTEGER DEFAULT 0,
@@ -69,6 +71,13 @@ class InteractionLogger:
         try:
             with self._connect() as conn:
                 conn.executescript(_SCHEMA)
+                # Migrate: add estimated_message_index if missing (pre-existing DBs)
+                try:
+                    conn.execute(
+                        "ALTER TABLE invocations ADD COLUMN estimated_message_index INTEGER DEFAULT -1"
+                    )
+                except Exception:
+                    pass  # column already exists
         except Exception:
             pass  # fail silently — logging should never break retrieval
 
@@ -117,6 +126,51 @@ class InteractionLogger:
 
     # ── Log an invocation ─────────────────────────────────────────
 
+    @staticmethod
+    def count_session_messages(session_id: str | None = None) -> int:
+        """Count how many lines the current session JSONL has.
+
+        This gives us the approximate message index at the time of
+        invocation — far more accurate than the old even-distribution guess.
+        Returns -1 if the file can't be read.
+        """
+        try:
+            sid = session_id
+            if not sid:
+                sid = os.environ.get("CMM_SESSION_ID")
+            if not sid:
+                # Find the latest session file
+                claude_projects = Path.home() / ".claude" / "projects"
+                if claude_projects.exists():
+                    latest = None
+                    latest_mtime = 0.0
+                    for d in claude_projects.iterdir():
+                        if not d.is_dir():
+                            continue
+                        for f in d.glob("*.jsonl"):
+                            mtime = f.stat().st_mtime
+                            if mtime > latest_mtime:
+                                latest_mtime = mtime
+                                latest = f
+                    if latest:
+                        sid = latest.stem
+                        # Count lines in this file
+                        return sum(1 for _ in latest.open())
+                return -1
+
+            # sid is known — search for it
+            claude_projects = Path.home() / ".claude" / "projects"
+            if claude_projects.exists():
+                for d in claude_projects.iterdir():
+                    if not d.is_dir():
+                        continue
+                    candidate = d / f"{sid}.jsonl"
+                    if candidate.exists():
+                        return sum(1 for _ in candidate.open())
+        except Exception:
+            pass
+        return -1
+
     def log_invocation(
         self,
         skill: str,
@@ -125,8 +179,14 @@ class InteractionLogger:
         results: list[dict[str, Any]] | None = None,
         response_time_ms: float = 0.0,
         raw_output_len: int = 0,
+        estimated_message_index: int = -1,
     ):
-        """Log a single skill invocation. Fails silently."""
+        """Log a single skill invocation. Fails silently.
+
+        Args:
+            estimated_message_index: the current message count in the session
+                JSONL at invocation time. If -1, the caller didn't measure it.
+        """
         try:
             session_id = self.get_session_id()
             invocation_id = str(uuid.uuid4())
@@ -148,8 +208,9 @@ class InteractionLogger:
                     """INSERT INTO invocations
                        (invocation_id, session_id, project_id, timestamp,
                         skill, query_text, result_count, node_ids,
-                        similarity_scores, response_time_ms, raw_output_len)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        similarity_scores, response_time_ms, raw_output_len,
+                        estimated_message_index)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         invocation_id,
                         session_id,
@@ -162,6 +223,7 @@ class InteractionLogger:
                         json.dumps(similarity_scores),
                         response_time_ms,
                         raw_output_len,
+                        estimated_message_index,
                     ),
                 )
         except Exception:
@@ -179,11 +241,11 @@ class InteractionLogger:
                         total_invocations, memory_used_at_start,
                         errors_encountered, errors_resolved_with_memory,
                         pitfalls_surfaced, pitfalls_avoided,
-                        pivots_after_retrieval,
+                        pivots_after_retrieval, harmful_memory_count,
                         total_dead_ends, total_pivots,
                         messages_to_first_solution, total_messages,
                         total_nodes, duration_seconds)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         evaluation["session_id"],
                         evaluation["project_id"],
@@ -195,6 +257,7 @@ class InteractionLogger:
                         evaluation.get("pitfalls_surfaced", 0),
                         evaluation.get("pitfalls_avoided", 0),
                         evaluation.get("pivots_after_retrieval", 0),
+                        evaluation.get("harmful_memory_count", 0),
                         evaluation.get("total_dead_ends", 0),
                         evaluation.get("total_pivots", 0),
                         evaluation.get("messages_to_first_solution", 0),

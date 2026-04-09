@@ -22,6 +22,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from ..schemas.reasoning import NodeType, ReasoningDAG
 from ..schemas.session import NormalizedSession
 from .logger import InteractionLogger
@@ -31,8 +33,20 @@ from .logger import InteractionLogger
 _RESOLUTION_WINDOW = 8
 # How many messages after a retrieval to look for a pivot
 _PIVOT_WINDOW = 5
-# Similarity threshold for matching pitfalls to dead ends
-_PITFALL_MATCH_THRESHOLD = 0.6
+# Cosine similarity threshold for pitfall-to-dead-end matching (improvement #2)
+_PITFALL_EMBED_THRESHOLD = 0.70
+# Cosine similarity threshold for harmful-memory detection (improvement #4)
+_HARMFUL_MEMORY_THRESHOLD = 0.70
+
+
+def _cosine_sim(a: list[float], b: list[float]) -> float:
+    """Cosine similarity between two vectors."""
+    va = np.array(a, dtype=np.float32)
+    vb = np.array(b, dtype=np.float32)
+    denom = np.linalg.norm(va) * np.linalg.norm(vb)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(va, vb) / denom)
 
 
 class SessionAnalyzer:
@@ -91,13 +105,16 @@ class SessionAnalyzer:
             dag, invocations, total_messages
         )
 
-        # Signal B: Pitfall avoidance
+        # Signal B: Pitfall avoidance (embedding-based matching)
         pitfalls_surfaced, pitfalls_avoided = self._count_pitfall_avoidance(
             dag, invocations, project_id
         )
 
         # Signal C: Pivots after retrieval
         pivots_after = self._count_pivots_after_retrieval(dag, invocations)
+
+        # Signal D: Harmful memory — memory loaded then a matching dead end
+        harmful_count = self._count_harmful_memory(dag, invocations, project_id)
 
         # Was memory used at session start? (first invocation in first 3 messages)
         memory_at_start = 0
@@ -119,6 +136,7 @@ class SessionAnalyzer:
             "pitfalls_surfaced": pitfalls_surfaced,
             "pitfalls_avoided": pitfalls_avoided,
             "pivots_after_retrieval": pivots_after,
+            "harmful_memory_count": harmful_count,
             "total_dead_ends": len(dead_ends),
             "total_pivots": len(pivots),
             "messages_to_first_solution": msgs_to_first_solution,
@@ -132,6 +150,43 @@ class SessionAnalyzer:
 
         return evaluation
 
+    # ── Retrieval position helper ─────────────────────────────────
+
+    @staticmethod
+    def _get_retrieval_positions(
+        invocations: list[dict],
+        skills: set[str],
+        total_messages: int,
+    ) -> list[int]:
+        """Extract message positions for invocations of the given skills.
+
+        Uses the real `estimated_message_index` recorded at invocation
+        time (improvement #1). Falls back to even-distribution estimation
+        only for legacy invocations that don't have the field.
+        """
+        relevant = [inv for inv in invocations if inv.get("skill") in skills]
+        if not relevant:
+            return []
+
+        positions: list[int] = []
+        needs_fallback = []
+        for i, inv in enumerate(relevant):
+            idx = inv.get("estimated_message_index", -1)
+            if isinstance(idx, int) and idx >= 0:
+                positions.append(idx)
+            else:
+                needs_fallback.append(i)
+
+        # Fallback for legacy invocations: distribute evenly
+        if needs_fallback and total_messages > 0:
+            for i in needs_fallback:
+                estimated_pos = int(
+                    (i + 1) / (len(relevant) + 1) * total_messages
+                )
+                positions.append(estimated_pos)
+
+        return sorted(positions)
+
     # ── Signal A: Error resolved using memory ─────────────────────
 
     def _count_errors_resolved_with_memory(
@@ -142,35 +197,19 @@ class SessionAnalyzer:
     ) -> int:
         """Count errors where memory retrieval preceded the resolution.
 
-        Pattern: DEAD_END at msg X → retrieval → SOLUTION within X+WINDOW
+        Pattern: DEAD_END at msg X → retrieval near X → SOLUTION within X+WINDOW
         """
-        if not invocations:
+        retrieval_positions = self._get_retrieval_positions(
+            invocations, {"search-memory", "diagnose"}, total_messages
+        )
+        if not retrieval_positions:
             return 0
-
-        # Build a set of message positions where retrievals happened
-        # We estimate position from invocation order within the session
-        retrieval_positions = set()
-        search_invocations = [
-            inv for inv in invocations
-            if inv.get("skill") in ("search-memory", "diagnose")
-        ]
-
-        # Map invocation timestamps to approximate message positions
-        for i, inv in enumerate(search_invocations):
-            # Rough estimate: distribute invocations across the session
-            if total_messages > 0 and len(search_invocations) > 0:
-                estimated_pos = int(
-                    (i + 1) / (len(search_invocations) + 1) * total_messages
-                )
-                retrieval_positions.add(estimated_pos)
 
         count = 0
         for dead_end in [n for n in dag.nodes if n.node_type == NodeType.DEAD_END]:
             de_pos = dead_end.message_range[0]
-            # Was there a retrieval near this dead end?
             for rp in retrieval_positions:
                 if abs(rp - de_pos) <= _RESOLUTION_WINDOW:
-                    # Is there a solution after the dead end within the window?
                     for solution in [n for n in dag.nodes if n.node_type == NodeType.SOLUTION]:
                         if (solution.message_range[0] > de_pos and
                                 solution.message_range[0] <= de_pos + _RESOLUTION_WINDOW):
@@ -180,7 +219,7 @@ class SessionAnalyzer:
 
         return count
 
-    # ── Signal B: Pitfall avoidance ───────────────────────────────
+    # ── Signal B: Pitfall avoidance (embedding similarity) ────────
 
     def _count_pitfall_avoidance(
         self,
@@ -190,11 +229,9 @@ class SessionAnalyzer:
     ) -> tuple[int, int]:
         """Count pitfalls surfaced and how many were avoided.
 
-        A pitfall is "avoided" if it was surfaced via /pitfalls or
-        /cognitive-profile, and no DEAD_END node in the session
-        semantically matches that pitfall.
+        Uses embedding cosine similarity (threshold 0.70) instead of
+        word overlap to match pitfalls against dead ends.
         """
-        # Check if pitfalls or cognitive-profile was called
         pitfall_invocations = [
             inv for inv in invocations
             if inv.get("skill") in ("pitfalls", "cognitive-profile")
@@ -202,7 +239,6 @@ class SessionAnalyzer:
         if not pitfall_invocations:
             return 0, 0
 
-        # Load the profile to get actual pitfall descriptions
         pitfalls_surfaced = 0
         pitfalls_avoided = 0
 
@@ -214,21 +250,29 @@ class SessionAnalyzer:
                 if profile and profile.pitfalls:
                     pitfalls_surfaced = len(profile.pitfalls)
 
-                    # Get dead end summaries
                     dead_end_summaries = [
-                        n.summary.lower()
+                        n.summary
                         for n in dag.nodes
                         if n.node_type == NodeType.DEAD_END
                     ]
 
-                    # For each pitfall, check if a dead end matches
-                    for pitfall in profile.pitfalls:
-                        pitfall_words = set(pitfall.description.lower().split())
+                    if not dead_end_summaries:
+                        # No dead ends → every pitfall was avoided
+                        return pitfalls_surfaced, pitfalls_surfaced
+
+                    # Embed pitfall descriptions and dead end summaries
+                    pitfall_texts = [p.description for p in profile.pitfalls]
+                    all_texts = pitfall_texts + dead_end_summaries
+                    all_embs = store.embed(all_texts)
+
+                    pitfall_embs = all_embs[:len(pitfall_texts)]
+                    de_embs = all_embs[len(pitfall_texts):]
+
+                    for p_emb in pitfall_embs:
                         matched = False
-                        for de_summary in dead_end_summaries:
-                            de_words = set(de_summary.split())
-                            overlap = len(pitfall_words & de_words)
-                            if overlap >= 3:  # at least 3 words in common
+                        for de_emb in de_embs:
+                            sim = _cosine_sim(p_emb, de_emb)
+                            if sim >= _PITFALL_EMBED_THRESHOLD:
                                 matched = True
                                 break
                         if not matched:
@@ -246,34 +290,100 @@ class SessionAnalyzer:
         invocations: list[dict],
     ) -> int:
         """Count pivot nodes that occur shortly after a memory retrieval."""
-        if not invocations:
-            return 0
-
-        search_invocations = [
-            inv for inv in invocations
-            if inv.get("skill") in ("search-memory", "diagnose")
-        ]
-        if not search_invocations:
-            return 0
-
-        # Estimate retrieval positions
         total_msgs = max(n.message_range[1] for n in dag.nodes) if dag.nodes else 0
-        retrieval_positions = []
-        for i, inv in enumerate(search_invocations):
-            if total_msgs > 0:
-                estimated_pos = int(
-                    (i + 1) / (len(search_invocations) + 1) * total_msgs
-                )
-                retrieval_positions.append(estimated_pos)
+        retrieval_positions = self._get_retrieval_positions(
+            invocations, {"search-memory", "diagnose"}, total_msgs
+        )
+        if not retrieval_positions:
+            return 0
 
         count = 0
-        pivots = [n for n in dag.nodes if n.node_type == NodeType.PIVOT]
-        for pivot in pivots:
+        for pivot in [n for n in dag.nodes if n.node_type == NodeType.PIVOT]:
             pivot_pos = pivot.message_range[0]
             for rp in retrieval_positions:
                 if 0 < pivot_pos - rp <= _PIVOT_WINDOW:
                     count += 1
                     break
+
+        return count
+
+    # ── Signal D: Harmful memory (false positive) ─────────────────
+
+    def _count_harmful_memory(
+        self,
+        dag: ReasoningDAG,
+        invocations: list[dict],
+        project_id: str,
+    ) -> int:
+        """Count cases where loaded memory may have actively misled the agent.
+
+        Pattern: the agent loaded pitfalls/insights via /cognitive-profile
+        or /pitfalls, and then hit a dead end that semantically matches
+        that memory. The memory may have pointed the agent in a wrong direction.
+        """
+        memory_invocations = [
+            inv for inv in invocations
+            if inv.get("skill") in ("cognitive-profile", "pitfalls", "search-memory", "diagnose")
+        ]
+        if not memory_invocations:
+            return 0
+
+        dead_end_summaries = [
+            n.summary for n in dag.nodes
+            if n.node_type == NodeType.DEAD_END
+        ]
+        if not dead_end_summaries:
+            return 0
+
+        count = 0
+        try:
+            if self._store_path:
+                from src.store.vector_store import MemoryStore
+                store = MemoryStore(persist_dir=self._store_path)
+
+                # Collect all memory texts that were surfaced
+                memory_texts: list[str] = []
+                profile = store.get_profile(project_id)
+                if profile:
+                    memory_texts.extend(p.description for p in profile.pitfalls)
+                    memory_texts.extend(i.insight for i in profile.architectural_insights)
+
+                # Also include search result texts from retrieval invocations
+                for inv in memory_invocations:
+                    node_ids_json = inv.get("node_ids", "[]")
+                    try:
+                        nids = json.loads(node_ids_json) if node_ids_json else []
+                    except Exception:
+                        nids = []
+                    if nids:
+                        try:
+                            fetched = store.nodes_col.get(ids=nids, include=["documents"])
+                            memory_texts.extend(fetched.get("documents", []))
+                        except Exception:
+                            pass
+
+                if not memory_texts:
+                    return 0
+
+                # Embed and compare
+                all_texts = memory_texts + dead_end_summaries
+                all_embs = store.embed(all_texts)
+
+                mem_embs = all_embs[:len(memory_texts)]
+                de_embs = all_embs[len(memory_texts):]
+
+                # For each dead end, check if any loaded memory matches it
+                matched_de = set()
+                for j, de_emb in enumerate(de_embs):
+                    for mem_emb in mem_embs:
+                        sim = _cosine_sim(mem_emb, de_emb)
+                        if sim >= _HARMFUL_MEMORY_THRESHOLD:
+                            matched_de.add(j)
+                            break
+
+                count = len(matched_de)
+        except Exception:
+            pass
 
         return count
 
