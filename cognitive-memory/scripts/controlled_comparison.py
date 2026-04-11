@@ -35,7 +35,9 @@ Claude Code setup. It writes two prompt files and a comparison runner
 that the user can execute manually or wire into CI.
 """
 import argparse
+import asyncio
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -171,11 +173,98 @@ def _print_comparison(comparison: dict, task: str):
         console.print("[bold yellow]Verdict: No measurable difference[/bold yellow]")
 
 
+def _compare_profiles(baseline_profile, assisted_profile) -> dict:
+    """Compare two CognitiveProfile objects head-to-head."""
+    def _stats(p):
+        if p is None:
+            return {
+                "architectural_insights": 0,
+                "pitfalls": 0,
+                "diagnostic_strategies": 0,
+                "key_patterns": 0,
+                "anti_patterns": 0,
+                "session_count": 0,
+            }
+        return {
+            "architectural_insights": len(p.architectural_insights),
+            "pitfalls": len(p.pitfalls),
+            "diagnostic_strategies": len(p.diagnostic_strategies),
+            "key_patterns": len(p.key_patterns),
+            "anti_patterns": len(p.anti_patterns),
+            "session_count": p.session_count,
+        }
+
+    b = _stats(baseline_profile)
+    a = _stats(assisted_profile)
+
+    def _delta(before, after):
+        return after - before
+
+    return {
+        "baseline": b,
+        "assisted": a,
+        "deltas": {k: _delta(b[k], a[k]) for k in b},
+        "verdict": (
+            "assisted_richer" if (
+                a["architectural_insights"] + a["pitfalls"] + a["diagnostic_strategies"]
+                > b["architectural_insights"] + b["pitfalls"] + b["diagnostic_strategies"]
+            )
+            else "baseline_richer" if (
+                a["architectural_insights"] + a["pitfalls"] + a["diagnostic_strategies"]
+                < b["architectural_insights"] + b["pitfalls"] + b["diagnostic_strategies"]
+            )
+            else "equal"
+        ),
+    }
+
+
+def _print_profile_comparison(comparison: dict, baseline_id: str, assisted_id: str):
+    console.print(Panel(
+        f"[bold]Profile Comparison[/bold]\n"
+        f"Baseline: [cyan]{baseline_id}[/cyan]\n"
+        f"Assisted: [cyan]{assisted_id}[/cyan]",
+        style="blue",
+    ))
+
+    table = Table(show_header=True)
+    table.add_column("Metric", style="cyan")
+    table.add_column("Baseline", justify="right")
+    table.add_column("Assisted", justify="right")
+    table.add_column("Delta", justify="right")
+
+    b = comparison["baseline"]
+    a = comparison["assisted"]
+    d = comparison["deltas"]
+
+    for label, key in [
+        ("Architectural insights", "architectural_insights"),
+        ("Pitfalls", "pitfalls"),
+        ("Diagnostic strategies", "diagnostic_strategies"),
+        ("Key patterns", "key_patterns"),
+        ("Anti-patterns", "anti_patterns"),
+        ("Source sessions", "session_count"),
+    ]:
+        delta = d[key]
+        color = "green" if delta > 0 else ("red" if delta < 0 else "dim")
+        sign = "+" if delta > 0 else ""
+        table.add_row(label, str(b[key]), str(a[key]), f"[{color}]{sign}{delta}[/{color}]")
+
+    console.print(table)
+
+    verdict = comparison["verdict"]
+    if verdict == "assisted_richer":
+        console.print("[bold green]Verdict: Assisted profile is richer[/bold green]")
+    elif verdict == "baseline_richer":
+        console.print("[bold red]Verdict: Baseline profile is richer[/bold red]")
+    else:
+        console.print("[bold yellow]Verdict: Profiles are equal in volume[/bold yellow]")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Controlled A/B comparison of memory vs no-memory on the same task"
     )
-    parser.add_argument("--project", "-p", required=True, help="Project ID")
+    parser.add_argument("--project", "-p", default=None, help="Project ID (for DAG mode)")
     parser.add_argument("--prompt", default=None, help="Task prompt (inline)")
     parser.add_argument("--prompt-file", default=None, help="Task prompt (from file)")
     parser.add_argument("--store-dir", default=None, help="Memory store directory")
@@ -183,13 +272,59 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Generate prompt files only")
     parser.add_argument(
         "--baseline-session", default=None,
-        help="Path to a pre-recorded baseline session JSONL (skip live baseline)"
+        help="Path to a pre-recorded baseline session JSONL"
     )
     parser.add_argument(
         "--assisted-session", default=None,
-        help="Path to a pre-recorded assisted session JSONL (skip live assisted)"
+        help="Path to a pre-recorded assisted session JSONL"
+    )
+    parser.add_argument(
+        "--cold", action="store_true",
+        help="Use cold-tier (LLM) extraction instead of warm. Needs ANTHROPIC_API_KEY."
+    )
+    parser.add_argument(
+        "--compare-profiles", nargs=2, metavar=("BASELINE_PROJECT", "ASSISTED_PROJECT"),
+        help="Compare two stored CognitiveProfiles by project ID. Skips DAG extraction entirely."
     )
     args = parser.parse_args()
+
+    # ── Profile-comparison mode ─────────────────────────────────────
+    if args.compare_profiles:
+        baseline_id, assisted_id = args.compare_profiles
+        store_dir = args.store_dir or str(Path(__file__).parent.parent / "data" / "memory_store")
+
+        from src.store.vector_store import MemoryStore
+        store = MemoryStore(persist_dir=store_dir)
+
+        baseline_profile = store.get_profile(baseline_id)
+        assisted_profile = store.get_profile(assisted_id)
+
+        if baseline_profile is None:
+            console.print(f"[red]No profile found for baseline project '{baseline_id}'[/red]")
+            sys.exit(1)
+        if assisted_profile is None:
+            console.print(f"[red]No profile found for assisted project '{assisted_id}'[/red]")
+            sys.exit(1)
+
+        comparison = _compare_profiles(baseline_profile, assisted_profile)
+        comparison["baseline_project"] = baseline_id
+        comparison["assisted_project"] = assisted_id
+        comparison["timestamp"] = datetime.now(timezone.utc).isoformat()
+        comparison["mode"] = "profile_comparison"
+
+        _print_profile_comparison(comparison, baseline_id, assisted_id)
+
+        out_dir = Path(args.output)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        report_path = out_dir / f"profile_comparison_{baseline_id}_vs_{assisted_id}_{int(time.time())}.json"
+        report_path.write_text(json.dumps(comparison, indent=2))
+        console.print(f"\n[dim]Report: {report_path}[/dim]")
+        return
+
+    # Below this point: DAG-comparison mode (the original flow)
+    if not args.project:
+        console.print("[red]--project is required for DAG comparison mode[/red]")
+        sys.exit(1)
 
     if not args.prompt and not args.prompt_file:
         console.print("[red]Provide --prompt or --prompt-file[/red]")
@@ -236,21 +371,31 @@ def main():
     # If pre-recorded sessions provided, compare them
     if args.baseline_session and args.assisted_session:
         from src.ingestion import ClaudeCodeParser
-        from src.extraction.warm_extractor import WarmExtractor
-
         parser = ClaudeCodeParser()
-        extractor = WarmExtractor()
 
         baseline_session = parser.parse_file(Path(args.baseline_session))
         assisted_session = parser.parse_file(Path(args.assisted_session))
 
-        baseline_dag = extractor.extract(baseline_session)
-        assisted_dag = extractor.extract(assisted_session)
+        if args.cold:
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                console.print("[red]--cold requires ANTHROPIC_API_KEY[/red]")
+                sys.exit(1)
+            console.print("[dim]Using cold-tier (LLM) extraction...[/dim]")
+            from src.extraction.dag_builder import DAGBuilder
+            builder = DAGBuilder()
+            baseline_dag = asyncio.run(builder.build(baseline_session))
+            assisted_dag = asyncio.run(builder.build(assisted_session))
+        else:
+            from src.extraction.warm_extractor import WarmExtractor
+            extractor = WarmExtractor()
+            baseline_dag = extractor.extract(baseline_session)
+            assisted_dag = extractor.extract(assisted_session)
 
         comparison = _compare_dags(baseline_dag, assisted_dag)
         comparison["task"] = task_prompt
         comparison["project"] = args.project
         comparison["timestamp"] = datetime.now(timezone.utc).isoformat()
+        comparison["extraction_tier"] = "cold" if args.cold else "warm"
 
         _print_comparison(comparison, task_prompt)
 
