@@ -1,850 +1,472 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cognitive Memory Manager — Applied ML Conference</title>
-<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=jetbrains-mono@400,600&f[]=satoshi@400,500,700&display=swap">
-<style>
-:root {
-  --bg-primary: #0a0f1c;
-  --bg-secondary: #111827;
-  --bg-card: #151c2e;
-  --text-primary: #e8ecf4;
-  --text-secondary: #94a3b8;
-  --text-dim: #64748b;
-  --accent: #00ffcc;
-  --accent-glow: rgba(0, 255, 204, 0.25);
-  --accent-2: #a78bfa;
-  --accent-3: #f59e0b;
-  --accent-4: #f87171;
-  --accent-5: #60a5fa;
-  --border: rgba(148, 163, 184, 0.12);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Memory Manager — Applied ML Conference</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  --font-display: 'Clash Display', sans-serif;
-  --font-body: 'Satoshi', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
 
-  --title-size: clamp(2rem, 6vw, 5rem);
-  --h2-size: clamp(1.5rem, 4vw, 3rem);
-  --h3-size: clamp(1rem, 2vw, 1.5rem);
-  --body-size: clamp(0.75rem, 1.2vw, 1rem);
-  --small-size: clamp(0.65rem, 1vw, 0.85rem);
+        .slide {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: clamp(2.5rem, 5vw, 4rem);
+            position: relative;
+        }
+        .slide > .content-wrapper { margin-top: auto; margin-bottom: auto; }
 
-  --slide-padding: clamp(1.5rem, 4vw, 4rem);
-  --content-gap: clamp(0.75rem, 2vw, 1.75rem);
+        .slide h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; margin-bottom: clamp(1.5rem, 3vh, 2rem); color: #1a1a1a; }
+        .slide h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 600; margin-bottom: clamp(2rem, 4vh, 3rem); color: #1a1a1a; }
+        .slide h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 600; margin-bottom: clamp(1rem, 2vh, 1.5rem); color: #2d3748; }
+        .slide p, .slide li { font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.7; margin-bottom: clamp(1rem, 2vh, 1.5rem); color: #4a5568; }
 
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-normal: 0.7s;
-}
+        .slide-title { background: #f8f9fa; border-bottom: 4px solid #2563eb; }
+        .slide-title h1 { color: #1a1a1a; margin-bottom: 1rem; }
+        .slide-title .subtitle { font-size: clamp(1.3rem, 2.5vw, 1.8rem); color: #4a5568; font-weight: 400; }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+        .content-wrapper { max-width: 1100px; margin: 0 auto; width: 100%; }
 
-html, body {
-  height: 100%;
-  overflow-x: hidden;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-}
+        .problem-item { background: #f8f9fa; padding: clamp(1.2rem, 2.5vh, 1.8rem); margin-bottom: clamp(1rem, 2vh, 1.5rem); border-left: 4px solid #dc2626; }
+        .problem-item h3 { color: #dc2626; margin-bottom: 0.5rem; }
+        .problem-item p { margin-bottom: 0; }
 
-html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+        .highlight-box { background: #f0f9ff; border: 2px solid #2563eb; padding: clamp(2rem, 4vh, 3rem); text-align: center; margin: 2rem 0; }
+        .highlight-box .big-stat { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 700; color: #2563eb; margin: 1rem 0; }
+        .highlight-box p { font-size: clamp(1.2rem, 2.3vw, 1.6rem); color: #1a1a1a; }
 
-.slide {
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding: var(--slide-padding);
-}
+        .workflow-container { max-width: 1000px; margin: 0 auto; }
+        .workflow-row { display: flex; align-items: center; justify-content: center; gap: clamp(0.75rem, 1.5vw, 1.5rem); margin: clamp(1.5rem, 3vh, 2.5rem) 0; flex-wrap: wrap; }
+        .workflow-box { background: #f0f9ff; border: 2px solid #2563eb; padding: clamp(0.8rem, 1.5vh, 1.2rem); border-radius: 8px; text-align: center; flex: 1; min-width: 120px; }
+        .workflow-box h3 { color: #2563eb; font-size: clamp(0.95rem, 1.7vw, 1.2rem); margin-bottom: 0.3rem; }
+        .workflow-box p { font-size: clamp(0.8rem, 1.4vw, 1rem); margin: 0; color: #1a1a1a; }
+        .workflow-box.warm { border-color: #d97706; } .workflow-box.warm h3 { color: #d97706; }
+        .workflow-box.cold { border-color: #059669; } .workflow-box.cold h3 { color: #059669; }
+        .workflow-box.review { border-color: #dc2626; } .workflow-box.review h3 { color: #dc2626; }
+        .workflow-arrow { font-size: clamp(1.5rem, 3vw, 2.5rem); color: #2563eb; font-weight: 700; }
 
-.slide-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  max-height: 100%;
-  overflow: hidden;
-}
+        .pipeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(1.5rem, 3vh, 2rem); margin-top: 2rem; }
+        .pipeline-step { background: #f8f9fa; padding: clamp(1.5rem, 3vh, 2rem); border-left: 4px solid #2563eb; }
+        .pipeline-step .step-number { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; color: #2563eb; margin-bottom: 0.5rem; }
+        .pipeline-step h3 { font-size: clamp(1.2rem, 2vw, 1.5rem); margin-bottom: 0.75rem; }
+        .pipeline-step p { font-size: clamp(1rem, 1.8vw, 1.2rem); margin-bottom: 0; }
 
-.slide::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
-  z-index: 0;
-}
-.slide > * { position: relative; z-index: 1; }
+        .compare-table-wrapper { overflow-x: auto; margin: 1.5rem 0; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .compare-table { width: 100%; border-collapse: collapse; font-size: clamp(0.85rem, 1.6vw, 1.05rem); }
+        .compare-table thead { background: #f8f9fa; border-bottom: 2px solid #2563eb; }
+        .compare-table th { padding: clamp(0.7rem, 1.4vh, 1rem); text-align: left; font-weight: 600; color: #1a1a1a; }
+        .compare-table td { padding: clamp(0.6rem, 1.2vh, 0.85rem); border-bottom: 1px solid #e2e8f0; color: #4a5568; }
+        .compare-table code { background: #f1f5f9; padding: 0.15rem 0.4rem; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.9em; color: #2563eb; }
 
-.reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity var(--duration-normal) var(--ease-out-expo),
-              transform var(--duration-normal) var(--ease-out-expo);
-}
-.slide.visible .reveal { opacity: 1; transform: translateY(0); }
-.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
-.slide.visible .reveal:nth-child(2) { transition-delay: 0.15s; }
-.slide.visible .reveal:nth-child(3) { transition-delay: 0.25s; }
-.slide.visible .reveal:nth-child(4) { transition-delay: 0.35s; }
-.slide.visible .reveal:nth-child(5) { transition-delay: 0.45s; }
-.slide.visible .reveal:nth-child(6) { transition-delay: 0.55s; }
+        .benefits-list { list-style: none; margin-top: 2rem; }
+        .benefits-list li { background: #f8f9fa; padding: clamp(1.2rem, 2.5vh, 1.8rem); margin-bottom: clamp(1rem, 2vh, 1.5rem); border-left: 4px solid #059669; position: relative; padding-left: clamp(3rem, 5vw, 4rem); }
+        .benefits-list li::before { content: "\2713"; position: absolute; left: clamp(1rem, 2vw, 1.5rem); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: #059669; }
+        .benefits-list strong { color: #1a1a1a; font-weight: 600; }
 
-h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
-h1 { font-size: var(--title-size); line-height: 1.05; }
-h2 { font-size: var(--h2-size); line-height: 1.1; margin-bottom: clamp(1rem, 2vw, 2rem); }
-h3 { font-size: var(--h3-size); line-height: 1.2; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(2rem, 4vh, 3rem); margin-top: 2rem; }
+        .result-card { background: #f8f9fa; padding: clamp(2rem, 4vh, 3rem); text-align: center; border-top: 4px solid #2563eb; }
+        .result-card .number { font-size: clamp(3rem, 6vw, 5rem); font-weight: 700; color: #2563eb; line-height: 1; }
+        .result-card .number.green { color: #059669; }
+        .result-card .number.amber { color: #d97706; }
+        .result-card .label { font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 600; color: #1a1a1a; margin-top: 1rem; }
+        .result-card p { font-size: clamp(1rem, 1.8vw, 1.2rem); margin-top: 0.75rem; margin-bottom: 0; }
 
-.tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: var(--small-size);
-  color: var(--accent);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-  padding: 0.35rem 0.8rem;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: var(--accent-glow);
-}
-.tag.alt { color: var(--accent-2); border-color: var(--accent-2); background: rgba(167,139,250,0.15); }
+        .summary-content { background: #f8f9fa; padding: clamp(2rem, 4vh, 3rem); border-left: 4px solid #2563eb; }
+        .summary-content h3 { color: #2563eb; }
+        .summary-content ul { list-style: none; margin-top: 1.5rem; }
+        .summary-content li { padding-left: 2rem; position: relative; margin-bottom: 1rem; }
+        .summary-content li::before { content: "\2022"; position: absolute; left: 0.5rem; color: #2563eb; font-weight: 700; font-size: 1.5rem; }
 
-p { font-size: var(--body-size); line-height: 1.55; color: var(--text-secondary); }
-strong { color: var(--text-primary); font-weight: 700; }
-.mono { font-family: var(--font-mono); }
+        .code-block { background: #1e293b; color: #e2e8f0; font-family: 'Courier New', monospace; font-size: clamp(0.8rem, 1.4vw, 1rem); padding: clamp(1rem, 2vh, 1.5rem); border-radius: 8px; overflow-x: auto; line-height: 1.5; margin: 1.5rem 0; }
+        .code-block .prompt { color: #94a3b8; } .code-block .cmd { color: #67e8f9; } .code-block .output { color: #86efac; } .code-block .comment { color: #64748b; }
 
-.title-slide { justify-content: center; align-items: flex-start; }
-.title-slide h1 {
-  font-size: clamp(2.5rem, 9vw, 7rem);
-  background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 1rem 0;
-}
-.title-slide .subtitle {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  color: var(--text-secondary);
-  max-width: 60ch;
-  margin-bottom: 2rem;
-}
-.title-slide .author {
-  font-family: var(--font-mono);
-  font-size: var(--small-size);
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-}
-.title-slide .author span { color: var(--accent); }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 4vw, 3rem); align-items: start; }
 
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(1rem, 3vw, 3rem);
-  align-items: center;
-}
-@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+        .node-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: clamp(0.6rem, 1vh, 0.8rem); margin-top: 1rem; }
+        .node-badge { display: flex; align-items: center; gap: 0.6rem; padding: clamp(0.6rem, 1.2vh, 0.9rem); background: #f8f9fa; border-left: 3px solid #2563eb; }
+        .node-badge .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .node-badge .name { font-weight: 600; font-size: clamp(0.9rem, 1.6vw, 1.1rem); color: #1a1a1a; }
+        .node-badge .desc { font-size: clamp(0.8rem, 1.4vw, 0.95rem); color: #4a5568; margin: 0; }
 
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: clamp(1rem, 2vw, 1.75rem);
-  position: relative;
-}
-.card.accent { border-color: rgba(0, 255, 204, 0.25); }
-.card.alt    { border-color: rgba(167, 139, 250, 0.25); }
-.card.warn   { border-color: rgba(245, 158, 11, 0.25); }
-.card.danger { border-color: rgba(248, 113, 113, 0.25); }
-.card h3 { color: var(--text-primary); margin-bottom: 0.5rem; }
-.card p { font-size: var(--small-size); }
-.card .label {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-bottom: 0.5rem;
-  display: block;
-}
-.card.alt .label    { color: var(--accent-2); }
-.card.warn .label   { color: var(--accent-3); }
-.card.danger .label { color: var(--accent-4); }
+        .dist-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(1.5rem, 3vw, 2.5rem); align-items: center; max-width: 950px; margin: 2rem auto 0; }
+        .dist-col { display: flex; flex-direction: column; gap: 0.75rem; }
+        .dist-box { background: #f8f9fa; border: 2px solid #e2e8f0; border-radius: 8px; padding: clamp(0.8rem, 1.5vh, 1.2rem); text-align: center; }
+        .dist-box .role { font-size: clamp(0.7rem, 1.2vw, 0.85rem); font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }
+        .dist-box.staging { border-color: #d97706; } .dist-box.staging .role { color: #d97706; }
+        .dist-box.shared { border-color: #059669; } .dist-box.shared .role { color: #059669; }
+        .dist-arrows { text-align: center; font-size: clamp(0.9rem, 1.6vw, 1.1rem); color: #4a5568; line-height: 1.8; }
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: clamp(0.75rem, 1.5vw, 1.25rem);
-}
+        .slide-number { position: absolute; bottom: 2rem; right: 2rem; font-size: 0.9rem; color: #94a3b8; }
 
-.pipeline {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 1rem;
-}
-.pipeline .stage {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-family: var(--font-mono);
-  font-size: var(--small-size);
-  color: var(--text-primary);
-  min-width: 110px;
-  text-align: center;
-}
-.pipeline .stage.warm  { border-color: var(--accent-3); color: var(--accent-3); }
-.pipeline .stage.cold  { border-color: var(--accent); color: var(--accent); }
-.pipeline .stage.store { border-color: var(--accent-2); color: var(--accent-2); }
-.pipeline .stage.share { border-color: var(--accent-5); color: var(--accent-5); }
-.pipeline .arrow { display: flex; align-items: center; color: var(--text-dim); font-size: 1.2rem; }
+        .nav-dots { position: fixed; right: 2rem; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 0.75rem; }
+        .nav-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e0; cursor: pointer; transition: all 0.3s ease; border: none; padding: 0; }
+        .nav-dot.active { background: #2563eb; transform: scale(1.4); }
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: clamp(1rem, 2vw, 2rem);
-  margin-top: 1rem;
-}
-.stat .num {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-.stat .num.alt  { color: var(--accent-2); }
-.stat .num.warn { color: var(--accent-3); }
-.stat .num.blue { color: var(--accent-5); }
-.stat .label {
-  font-size: var(--small-size);
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
-  display: block;
-}
-
-.code {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: clamp(0.75rem, 1.5vw, 1.25rem);
-  font-family: var(--font-mono);
-  font-size: var(--small-size);
-  color: var(--text-primary);
-  line-height: 1.6;
-  white-space: pre;
-  overflow-x: auto;
-}
-.code .kw { color: var(--accent-2); }
-.code .str { color: var(--accent); }
-.code .com { color: var(--text-dim); }
-.code .num { color: var(--accent-3); }
-
-.bullets { list-style: none; display: flex; flex-direction: column; gap: clamp(0.5rem, 1vw, 1rem); }
-.bullets li {
-  font-size: var(--body-size);
-  color: var(--text-secondary);
-  padding-left: 1.5rem;
-  position: relative;
-  line-height: 1.5;
-}
-.bullets li::before {
-  content: '▸';
-  color: var(--accent);
-  position: absolute;
-  left: 0;
-  font-family: var(--font-mono);
-}
-
-.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.compare .col {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: clamp(1rem, 2vw, 1.5rem);
-}
-.compare .col.before { border-top: 3px solid var(--accent-4); }
-.compare .col.after  { border-top: 3px solid var(--accent); }
-.compare .col h3 { margin-bottom: 0.75rem; }
-.compare .col .meta {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  display: block;
-  margin-bottom: 0.75rem;
-}
-
-/* Distributed architecture diagram */
-.dist-diagram {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr 1fr;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
-  align-items: center;
-  margin-top: 1rem;
-}
-.dist-col { display: flex; flex-direction: column; gap: 0.6rem; }
-.dist-node {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.7rem 0.9rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-primary);
-  text-align: center;
-}
-.dist-node.dev    { border-left: 3px solid var(--accent-5); }
-.dist-node.shared { border-left: 3px solid var(--accent-2); }
-.dist-node.staging { border-left: 3px solid var(--accent-3); }
-.dist-node .role  { font-size: 0.65rem; color: var(--accent); display: block; margin-bottom: 0.2rem; }
-.dist-arrows { text-align: center; color: var(--text-dim); font-size: 0.85rem; line-height: 1.6; }
-
-/* Workflow arrows for review pipeline */
-.workflow {
-  display: flex;
-  align-items: stretch;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 1rem;
-}
-.workflow .step {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.65rem 0.9rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  flex: 1 1 auto;
-  text-align: center;
-  min-width: 100px;
-}
-.workflow .step b { display: block; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.2rem; }
-.workflow .step.local   { border-top: 2px solid var(--accent-5); }
-.workflow .step.staging { border-top: 2px solid var(--accent-3); }
-.workflow .step.review  { border-top: 2px solid var(--accent-4); }
-.workflow .step.shared  { border-top: 2px solid var(--accent-2); }
-.workflow .step.local2  { border-top: 2px solid var(--accent); }
-
-.progress-bar {
-  position: fixed;
-  top: 0; left: 0;
-  height: 3px;
-  background: var(--accent);
-  width: 0%;
-  z-index: 100;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 10px var(--accent-glow);
-}
-
-.slide-num {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
-  z-index: 2;
-}
-
-.nav-dots {
-  position: fixed;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  z-index: 50;
-}
-.nav-dots .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: rgba(148,163,184,0.3);
-  cursor: pointer;
-  transition: all 0.3s;
-  border: none;
-  padding: 0;
-}
-.nav-dots .dot.active {
-  background: var(--accent);
-  transform: scale(1.4);
-  box-shadow: 0 0 10px var(--accent-glow);
-}
-
-.hint {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-  z-index: 50;
-}
-
-@media (max-height: 700px) {
-  :root {
-    --slide-padding: clamp(1rem, 3vw, 2.5rem);
-    --content-gap: clamp(0.5rem, 1.5vw, 1rem);
-  }
-}
-@media (max-height: 600px) {
-  .nav-dots, .hint, .slide-num { display: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
-}
-</style>
+        @media (max-width: 768px) { .nav-dots { right: 1rem; } .pipeline-grid, .two-col { grid-template-columns: 1fr; } .dist-grid { grid-template-columns: 1fr; } }
+        @media print {
+            @page { size: 1280px 720px; margin: 0; }
+            html, body { width: 1280px; height: 720px; overflow: visible; }
+            .slide { width: 1280px; height: 720px; min-height: 720px; max-height: 720px; page-break-after: always; page-break-inside: avoid; overflow: hidden; padding: 40px 60px; }
+            .slide:last-child { page-break-after: auto; }
+            .nav-dots { display: none !important; }
+            .slide h1 { font-size: 44px; } .slide h2 { font-size: 36px; margin-bottom: 20px; } .slide h3 { font-size: 20px; }
+            .slide p, .slide li { font-size: 16px; margin-bottom: 10px; line-height: 1.5; }
+            .result-card .number { font-size: 40px !important; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="progress-bar"></div>
-<nav class="nav-dots"></nav>
-<div class="hint">↓ scroll · → arrow · space</div>
+<div class="nav-dots" id="navDots"></div>
 
-<!-- ════════ SLIDE 1: TITLE ════════ -->
-<section class="slide title-slide">
-  <span class="tag reveal">Applied ML Conference 2026</span>
-  <h1 class="reveal">Cognitive<br>Memory<br>Manager</h1>
-  <p class="subtitle reveal">From single-developer reasoning capture to a team-scale memory layer for AI coding agents — with token-budgeted extraction and human-gated knowledge sharing.</p>
-  <p class="author reveal">Sazan Khalid · <span>github.com/sazandkhalid/cmm</span></p>
-  <div class="slide-num">01 / 14</div>
-</section>
-
-<!-- ════════ SLIDE 2: PROBLEM ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">The Problem</span>
-    <h2 class="reveal">Coding agents have amnesia.<br><span style="color:var(--accent)">Teams have it twice.</span></h2>
-    <div class="two-col">
-      <div class="reveal">
-        <p>Every Claude Code session starts from scratch. The agent reads the same files, hits the same dead ends, and rediscovers the same architectural quirks — over and over.</p>
-        <br>
-        <p><strong>Worse: each developer's agent learns alone.</strong> Alice's debugging insight on Tuesday never reaches Bob on Thursday. The team rediscovers the same pitfalls in parallel.</p>
-      </div>
-      <ul class="bullets reveal">
-        <li>No memory of past dead-ends or pivots</li>
-        <li>No accumulated knowledge across sessions</li>
-        <li>No cross-developer knowledge transfer</li>
-        <li>Same bug debugged 4 times by 4 developers</li>
-        <li>Onboarding a new dev takes weeks of tribal knowledge</li>
-      </ul>
+<!-- Slide 1: Title -->
+<div class="slide slide-title">
+    <div class="content-wrapper">
+        <h1>Cognitive Memory Manager</h1>
+        <p class="subtitle">Persistent reasoning memory for AI coding agents</p>
+        <p class="subtitle">Token-budgeted extraction, team-scale distributed store, human-gated knowledge sharing</p>
+        <p style="margin-top: 2rem; font-size: clamp(1rem, 1.8vw, 1.3rem); color: #94a3b8;">Sazan Khalid &middot; Applied ML Conference 2026 &middot; github.com/sazandkhalid/cmm</p>
     </div>
-  </div>
-  <div class="slide-num">02 / 14</div>
-</section>
+    <div class="slide-number">1 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 3: APPROACH ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">The Approach</span>
-    <h2 class="reveal">Reasoning DAGs as institutional memory.</h2>
-    <p class="reveal" style="max-width: 70ch; margin-bottom: 2rem;">Extract a typed reasoning graph from every session. Cluster across sessions to distill durable knowledge. Gate knowledge sharing through a human-in-the-loop review layer so one bad insight can't poison the whole team.</p>
-    <div class="pipeline reveal">
-      <div class="stage">Session<br>JSONL</div>
-      <div class="arrow">→</div>
-      <div class="stage warm">Warm</div>
-      <div class="arrow">→</div>
-      <div class="stage cold">Cold<br>(token-budget)</div>
-      <div class="arrow">→</div>
-      <div class="stage store">Local<br>Store</div>
-      <div class="arrow">→</div>
-      <div class="stage share">Push to<br>Staging</div>
-      <div class="arrow">→</div>
-      <div class="stage">Review</div>
-      <div class="arrow">→</div>
-      <div class="stage share">Shared<br>Main</div>
+<!-- Slide 2: The Problem -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>The Problem: Agents Have Amnesia</h2>
+        <div class="problem-item"><h3>Every Session Starts From Scratch</h3><p>The agent reads the same files, hits the same dead ends, and rediscovers the same architectural quirks &mdash; over and over</p></div>
+        <div class="problem-item"><h3>No Cross-Session Learning</h3><p>Last week's debugging breakthrough is locked in a JSONL transcript that no agent will ever read again</p></div>
+        <div class="problem-item"><h3>No Cross-Developer Transfer</h3><p>Alice's agent learns a pitfall on Tuesday. Bob's agent rediscovers it on Thursday. The team pays twice</p></div>
+        <div class="problem-item"><h3>Onboarding Is Manual</h3><p>New developers spend weeks absorbing tribal knowledge that agents could have accumulated automatically</p></div>
     </div>
-  </div>
-  <div class="slide-num">03 / 14</div>
-</section>
+    <div class="slide-number">2 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 4: TOKEN-BUDGET EXTRACTION ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 1 · Cold Tier</span>
-    <h2 class="reveal">Token-budget extraction.</h2>
-    <p class="reveal" style="max-width: 70ch; margin-bottom: 1.5rem;">Fixed 5-message windows split reasoning sequences across boundaries arbitrarily. The new approach packs each LLM call to <strong>45% of the model's context window</strong> using the Anthropic SDK's token counter — research-backed safe utilization.</p>
-    <div class="compare">
-      <div class="col before reveal">
-        <span class="meta">Before</span>
-        <h3>Fixed 5-message windows</h3>
-        <p style="font-size: var(--small-size); margin: 0.75rem 0;">Long sessions produced 30+ tiny windows. The LLM never saw enough context to identify cross-cutting patterns.</p>
-        <ul class="bullets" style="margin-top: 0.75rem;">
-          <li>30 windows × small context</li>
-          <li>One node per window</li>
-          <li>Reasoning split mid-thought</li>
-        </ul>
-      </div>
-      <div class="col after reveal">
-        <span class="meta">After</span>
-        <h3>Token-budget windows</h3>
-        <p style="font-size: var(--small-size); margin: 0.75rem 0;">Same session → 2-3 large windows, each carrying as much context as the model can confidently process. Single-window fast path for sessions that fit.</p>
-        <ul class="bullets" style="margin-top: 0.75rem;">
-          <li>~85k token budget per window</li>
-          <li>Multiple nodes per window</li>
-          <li>750-token trailing overlap</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <div class="slide-num">04 / 14</div>
-</section>
-
-<!-- ════════ SLIDE 5: WHY 45% ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 1 · The Research</span>
-    <h2 class="reveal">Why 45%?</h2>
-    <div class="two-col">
-      <div class="reveal">
-        <p>LLM performance degrades as context fills up — even within the advertised window. Our 45% target sits well below known degradation thresholds while maximizing how much session content the model can actually reason over.</p>
-        <br>
-        <p class="mono" style="color: var(--accent); font-size: var(--small-size);">CMM_CONTEXT_FILL_RATIO=0.45</p>
-        <p style="font-size: var(--small-size); color: var(--text-dim);">Configurable per-project via env or config file.</p>
-      </div>
-      <div class="card-grid reveal">
-        <div class="card accent">
-          <span class="label">Chroma 2025</span>
-          <h3>Universal degradation</h3>
-          <p>All 18 frontier models degrade as input length grows.</p>
+<!-- Slide 3: The Solution -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Solution: Treat Sessions as Reasoning Traces</h2>
+        <div class="highlight-box">
+            <p><strong>Without CMM: agent forgets everything at session end</strong></p>
+            <div class="big-stat">&darr;</div>
+            <p><strong>With CMM: agent starts every session with accumulated team knowledge</strong></p>
         </div>
-        <div class="card alt">
-          <span class="label">Liu et al. 2024</span>
-          <h3>Lost in the Middle</h3>
-          <p>30%+ accuracy drops for information mid-context.</p>
+        <p style="text-align: center; font-size: clamp(1.1rem, 2.2vw, 1.5rem); color: #1a1a1a;"><strong>Extract reasoning DAGs &rarr; Consolidate into durable knowledge &rarr; Share with human review</strong></p>
+    </div>
+    <div class="slide-number">3 / 16</div>
+</div>
+
+<!-- Slide 4: Architecture -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>End-to-End Architecture</h2>
+        <div class="workflow-container">
+            <div class="workflow-row">
+                <div class="workflow-box"><h3>Session JSONL</h3><p>Claude Code transcript</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box"><h3>Parse</h3><p>NormalizedSession</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box warm"><h3>Extract</h3><p>Warm or Cold tier</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box"><h3>Deduplicate</h3><p>Cosine &ge; 0.85</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box cold"><h3>Store</h3><p>ChromaDB</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box"><h3>Profile</h3><p>Cluster + LLM</p></div>
+            </div>
         </div>
-        <div class="card warn">
-          <span class="label">Paulsen 2025 · MECW</span>
-          <h3>Effective Context</h3>
-          <p>Real usable window is drastically below the advertised maximum.</p>
+        <div style="margin-top: 2rem;"><p style="text-align: center; font-size: clamp(1.05rem, 2vw, 1.35rem); color: #2d3748;"><strong>Key Innovation:</strong> Two-tier extraction with token-budget windowing at 45% context utilization</p></div>
+    </div>
+    <div class="slide-number">4 / 16</div>
+</div>
+
+<!-- Slide 5: Reasoning DAG -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>The Reasoning DAG</h2>
+        <p>Each session becomes a directed graph of typed reasoning nodes with causal edges:</p>
+        <div class="node-types">
+            <div class="node-badge"><span class="dot" style="background: #2563eb;"></span><div><span class="name">HYPOTHESIS</span><p class="desc">Agent forms a theory</p></div></div>
+            <div class="node-badge"><span class="dot" style="background: #7c3aed;"></span><div><span class="name">INVESTIGATION</span><p class="desc">Examines evidence</p></div></div>
+            <div class="node-badge"><span class="dot" style="background: #059669;"></span><div><span class="name">DISCOVERY</span><p class="desc">Finds the unexpected</p></div></div>
+            <div class="node-badge" style="border-color: #d97706;"><span class="dot" style="background: #d97706;"></span><div><span class="name">PIVOT</span><p class="desc">Changes approach</p></div></div>
+            <div class="node-badge" style="border-color: #dc2626;"><span class="dot" style="background: #dc2626;"></span><div><span class="name">DEAD END</span><p class="desc">Path that failed</p></div></div>
+            <div class="node-badge" style="border-color: #059669;"><span class="dot" style="background: #22c55e;"></span><div><span class="name">SOLUTION</span><p class="desc">Working resolution</p></div></div>
         </div>
-      </div>
+        <p style="margin-top: 1.5rem;">Edges: <code>led_to</code>, <code>refined</code>, <code>contradicted</code>, <code>caused_pivot_to</code>, <code>resolved</code>. Pivots and dead ends are first-class &mdash; often the most valuable signals.</p>
     </div>
-  </div>
-  <div class="slide-num">05 / 14</div>
-</section>
+    <div class="slide-number">5 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 6: REASONING DAG ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Schema</span>
-    <h2 class="reveal">Sessions become typed graphs.</h2>
-    <div class="two-col">
-      <div class="reveal">
-        <p>Each node represents one reasoning activity. Edges capture causal relationships: <span class="mono" style="color:var(--accent)">led_to</span>, <span class="mono" style="color:var(--accent)">refined</span>, <span class="mono" style="color:var(--accent)">caused_pivot_to</span>.</p>
-        <br>
-        <p>Pivots and dead ends are first-class — they're often the most valuable signals for future sessions.</p>
-      </div>
-      <div class="card-grid reveal" style="grid-template-columns: repeat(2, 1fr);">
-        <div class="card"><span class="label" style="color:#3b82f6">HYPOTHESIS</span><p>Forms a theory</p></div>
-        <div class="card"><span class="label" style="color:#8b5cf6">INVESTIGATION</span><p>Examines evidence</p></div>
-        <div class="card"><span class="label" style="color:#10b981">DISCOVERY</span><p>Finds the unexpected</p></div>
-        <div class="card"><span class="label" style="color:#f59e0b">PIVOT</span><p>Changes approach</p></div>
-        <div class="card"><span class="label" style="color:#ef4444">DEAD END</span><p>Path that failed</p></div>
-        <div class="card"><span class="label" style="color:#22c55e">SOLUTION</span><p>Working resolution</p></div>
-      </div>
+<!-- Slide 6: Two-Tier Extraction -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Two-Tier Extraction</h2>
+        <div class="compare-table-wrapper">
+            <table class="compare-table">
+                <thead><tr><th></th><th>Warm Tier (heuristic)</th><th>Cold Tier (LLM)</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Speed</strong></td><td>&lt; 1 second</td><td>~30 seconds</td></tr>
+                    <tr><td><strong>API cost</strong></td><td>Free (regex)</td><td>Anthropic API calls</td></tr>
+                    <tr><td><strong>Confidence</strong></td><td>0.25 &ndash; 0.75</td><td>0.50 &ndash; 0.95</td></tr>
+                    <tr><td><strong>When</strong></td><td>Every session end (automatic)</td><td>On demand (<code>cmm consolidate --upgrade</code>)</td></tr>
+                    <tr><td><strong>Strategies</strong></td><td>Keyword scoring, error-resolution pairs, explicit conclusions</td><td>Token-budget window classification, LLM edge inference</td></tr>
+                    <tr><td><strong>Node IDs</strong></td><td><code>warm-NNN</code></td><td><code>node-WWW-NN</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="text-align: center;">Warm tier is always-on. Cold tier upgrades quality when you invest API spend.</p>
     </div>
-  </div>
-  <div class="slide-num">06 / 14</div>
-</section>
+    <div class="slide-number">6 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 7: SCOPE ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 2 · Scope</span>
-    <h2 class="reveal">Project-specific or team-wide?</h2>
-    <p class="reveal" style="max-width: 70ch; margin-bottom: 1.5rem;">Every memory is classified at profile-build time as either <span class="mono" style="color:var(--accent)">PROJECT</span> (specific to one repo) or <span class="mono" style="color:var(--accent-2)">TEAM</span> (general knowledge). Team-scoped insights cross project boundaries automatically.</p>
-    <div class="compare">
-      <div class="col after reveal" style="border-top-color: var(--accent);">
-        <span class="meta" style="color: var(--accent)">PROJECT scope</span>
-        <h3>This codebase only</h3>
-        <p style="font-size: var(--small-size); margin: 0.75rem 0;"><em>"The supply-chain project's Alembic migrations require all models to be registered in models/__init__.py for autodetect to work."</em></p>
-        <p style="font-size: var(--small-size); color: var(--text-dim);">Useless for any other repo.</p>
-      </div>
-      <div class="col after reveal" style="border-top-color: var(--accent-2);">
-        <span class="meta" style="color: var(--accent-2)">TEAM scope</span>
-        <h3>Any project, any team</h3>
-        <p style="font-size: var(--small-size); margin: 0.75rem 0;"><em>"Pydantic v2 requires migrating from class Config to model_config = ConfigDict(...). Old patterns silently work but emit deprecation warnings."</em></p>
-        <p style="font-size: var(--small-size); color: var(--text-dim);">Applies to every Python project using Pydantic.</p>
-      </div>
+<!-- Slide 7: Token-Budget Windowing -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Token-Budget Windowing (Cold Tier)</h2>
+        <div class="two-col">
+            <div>
+                <h3 style="color: #dc2626;">Before: Fixed 5-Message Windows</h3>
+                <div class="problem-item"><p>Long sessions &rarr; 30+ tiny windows. The LLM never saw enough context. Reasoning split mid-thought.</p></div>
+                <h3 style="color: #059669;">After: Token-Budget Windows</h3>
+                <div style="background: #f0fdf4; padding: 1.2rem; border-left: 4px solid #059669; margin-top: 0.5rem;"><p style="margin-bottom: 0;">Same session &rarr; 2&ndash;3 large windows, each at 45% of 200K context. Single-window fast path for short sessions.</p></div>
+            </div>
+            <div>
+                <h3>Why 45%?</h3>
+                <div class="pipeline-step" style="border-color: #7c3aed; margin-bottom: 1rem;"><h3 style="font-size: 1.1rem;">Chroma 2025</h3><p>All 18 frontier models degrade with increasing input length</p></div>
+                <div class="pipeline-step" style="border-color: #7c3aed; margin-bottom: 1rem;"><h3 style="font-size: 1.1rem;">Liu et al. 2024</h3><p>"Lost in the Middle" &mdash; 30%+ accuracy drops for mid-context information</p></div>
+                <div class="pipeline-step" style="border-color: #7c3aed;"><h3 style="font-size: 1.1rem;">Paulsen 2025 (MECW)</h3><p>Effective context is drastically below advertised maximums</p></div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="slide-num">07 / 14</div>
-</section>
+    <div class="slide-number">7 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 8: DISTRIBUTED ARCHITECTURE ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 3 · Distributed Architecture</span>
-    <h2 class="reveal">Local cache + shared team store.</h2>
-    <p class="reveal" style="max-width: 70ch; margin-bottom: 1.5rem;">Every developer keeps a fast local ChromaDB. A second ChromaDB lives on shared storage (filesystem, NFS, git-tracked). Local-only mode is the default — shared mode is opt-in and fully backwards-compatible.</p>
-    <div class="dist-diagram reveal">
-      <div class="dist-col">
-        <div class="dist-node dev"><span class="role">DEVELOPER</span>Alice<br><span style="color:var(--text-dim)">local store</span></div>
-        <div class="dist-node dev"><span class="role">DEVELOPER</span>Bob<br><span style="color:var(--text-dim)">local store</span></div>
-        <div class="dist-node dev"><span class="role">DEVELOPER</span>Carol<br><span style="color:var(--text-dim)">local store</span></div>
-      </div>
-      <div class="dist-arrows">
-        push  →<br>
-        ←  pull<br>
-        <span style="font-size: 0.6rem;">approved only</span>
-      </div>
-      <div class="dist-col">
-        <div class="dist-node staging"><span class="role">STAGING</span>Pending review<br><span style="color:var(--text-dim)">human gate</span></div>
-        <div class="dist-node shared"><span class="role">MAIN</span>Approved<br><span style="color:var(--text-dim)">team-visible</span></div>
-        <div class="dist-node shared"><span class="role">PROFILES</span>Distilled<br><span style="color:var(--text-dim)">cached_profile.md</span></div>
-      </div>
+<!-- Slide 8: Knowledge Consolidation -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Knowledge Consolidation</h2>
+        <p>Raw reasoning nodes are clustered and classified into three knowledge types:</p>
+        <div class="pipeline-grid">
+            <div class="pipeline-step"><div class="step-number">AI</div><h3>Architectural Insights</h3><p>Structural understanding of the codebase. Component relationships, configuration patterns, dependency rules.</p></div>
+            <div class="pipeline-step" style="border-color: #dc2626;"><div class="step-number" style="color: #dc2626;">!</div><h3>Known Pitfalls</h3><p>Recurring problems ranked by severity. Each includes a resolution strategy derived from how past agents solved them.</p></div>
+            <div class="pipeline-step" style="border-color: #059669;"><div class="step-number" style="color: #059669;">Dx</div><h3>Diagnostic Strategies</h3><p>Proven debugging approaches with ordered steps and success rates from prior sessions.</p></div>
+        </div>
+        <p style="text-align: center; margin-top: 2rem;">Plus <strong>key patterns</strong> (recurring successes) and <strong>anti-patterns</strong> (approaches that consistently fail)</p>
     </div>
-  </div>
-  <div class="slide-num">08 / 14</div>
-</section>
+    <div class="slide-number">8 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 9: PUSH/PULL/REVIEW WORKFLOW ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 4-5 · Sync Workflow</span>
-    <h2 class="reveal">Push → Review → Pull.</h2>
-    <p class="reveal" style="max-width: 70ch; margin-bottom: 1.5rem;">New memories never enter the shared main collection directly. They land in <strong>staging</strong>, where a human reviewer approves, rejects, or reclassifies before they become team-visible.</p>
-    <div class="workflow reveal">
-      <div class="step local"><b>Local</b>warm extract</div>
-      <div class="step local">cmm push</div>
-      <div class="step staging"><b>Staging</b>pending review</div>
-      <div class="step review"><b>Review</b>cmm review</div>
-      <div class="step shared"><b>Shared Main</b>approved</div>
-      <div class="step local2">cmm pull</div>
-      <div class="step local2"><b>Other devs</b>local cache</div>
+<!-- Slide 9: Memory Scope -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Project vs. Team Scope</h2>
+        <p>Every memory entry is classified at profile-build time:</p>
+        <div class="two-col" style="margin-top: 1.5rem;">
+            <div style="background: #f0f9ff; padding: 1.5rem; border-left: 4px solid #2563eb;">
+                <h3 style="color: #2563eb;">PROJECT Scope</h3>
+                <p><em>"The supply-chain project's Alembic migrations require all models to be registered in <code>models/__init__.py</code> for autodetect to work."</em></p>
+                <p style="color: #94a3b8; margin-bottom: 0;">Useless for any other repo.</p>
+            </div>
+            <div style="background: #f0fdf4; padding: 1.5rem; border-left: 4px solid #059669;">
+                <h3 style="color: #059669;">TEAM Scope</h3>
+                <p><em>"Pydantic v2 requires migrating from <code>class Config</code> to <code>model_config = ConfigDict(...)</code>. Old patterns silently work but emit deprecation warnings."</em></p>
+                <p style="color: #94a3b8; margin-bottom: 0;">Applies to every Python project using Pydantic.</p>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 2rem;">Team-scope memories cross project boundaries automatically on <code>cmm pull</code>.</p>
     </div>
-    <div class="card-grid reveal" style="margin-top: 1.5rem;">
-      <div class="card warn">
-        <span class="label">cmm push</span>
-        <p>Stages unpushed local nodes into shared/staging. Marks them locally so they don't push twice.</p>
-      </div>
-      <div class="card danger">
-        <span class="label">cmm review</span>
-        <p>Interactive Rich UI: approve, reject, swap-scope, edit summary. Every action audited in SQLite.</p>
-      </div>
-      <div class="card alt">
-        <span class="label">cmm pull</span>
-        <p>Fetches approved project + team-scope nodes. Dedupes against existing local. No bounce-back.</p>
-      </div>
-    </div>
-  </div>
-  <div class="slide-num">09 / 14</div>
-</section>
+    <div class="slide-number">9 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 10: HUMAN-IN-THE-LOOP ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 5 · The Approval Gate</span>
-    <h2 class="reveal">Why human review matters.</h2>
-    <div class="two-col">
-      <div class="reveal">
-        <p>Without a gate, one agent's hallucinated insight becomes institutional false knowledge for the entire team. The reviewer is the firewall.</p>
-        <br>
-        <p>Reviewers see node type, scope, confidence, source developer, and the original session ID. They can approve, reject with a reason, swap project ↔ team scope, or edit the summary inline.</p>
-        <br>
-        <p style="font-size: var(--small-size); color: var(--text-dim);">All actions logged to <span class="mono">data/sync/sync.db</span> — auditable, attributable, and rejection-reasons preserved for postmortems.</p>
-      </div>
-      <div class="code reveal"><span class="com"># cmm review --project supply-chain</span>
-[3/12] HYPOTHESIS · scope=project
-       confidence=0.78 · by alice
+<!-- Slide 10: Distributed Architecture -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Distributed Memory Architecture</h2>
+        <p>Every developer keeps a fast local ChromaDB cache. A second ChromaDB on shared storage enables team knowledge sharing.</p>
+        <div class="dist-grid">
+            <div class="dist-col">
+                <div class="dist-box"><span class="role">Developer</span><br>Alice &mdash; local store</div>
+                <div class="dist-box"><span class="role">Developer</span><br>Bob &mdash; local store</div>
+                <div class="dist-box"><span class="role">Developer</span><br>Carol &mdash; local store</div>
+            </div>
+            <div class="dist-arrows"><strong>push &rarr;</strong><br><strong>&larr; pull</strong><br><span style="font-size: 0.85rem; color: #94a3b8;">approved only</span></div>
+            <div class="dist-col">
+                <div class="dist-box staging"><span class="role">Staging</span><br>Pending human review</div>
+                <div class="dist-box shared"><span class="role">Main</span><br>Approved &amp; team-visible</div>
+                <div class="dist-box shared"><span class="role">Profiles</span><br>Distilled knowledge</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">10 / 16</div>
+</div>
+
+<!-- Slide 11: Push / Review / Pull -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Push &rarr; Review &rarr; Pull</h2>
+        <p>New memories never enter the shared main collection directly. They land in <strong>staging</strong> for human review.</p>
+        <div class="workflow-container">
+            <div class="workflow-row">
+                <div class="workflow-box"><h3>Local Store</h3><p>Warm extract</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box warm"><h3>cmm push</h3><p>Stage for review</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box review"><h3>cmm review</h3><p>Approve / Reject</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box cold"><h3>Shared Main</h3><p>Approved nodes</p></div>
+                <div class="workflow-arrow">&rarr;</div>
+                <div class="workflow-box"><h3>cmm pull</h3><p>Other developers</p></div>
+            </div>
+        </div>
+        <p style="margin-top: 2rem; text-align: center;"><strong>Why the gate?</strong> Without review, one agent's hallucinated insight becomes institutional false knowledge for the entire team.</p>
+    </div>
+    <div class="slide-number">11 / 16</div>
+</div>
+
+<!-- Slide 12: Review UI -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Human-in-the-Loop Review</h2>
+        <div class="two-col">
+            <div>
+                <p>Reviewers see full context: type, scope, confidence, source developer, session ID, evidence.</p>
+                <ul class="benefits-list" style="margin-top: 1rem;">
+                    <li><strong>Approve</strong> &mdash; promotes to shared main</li>
+                    <li><strong>Reject</strong> &mdash; soft delete with audit reason</li>
+                    <li><strong>Swap scope</strong> &mdash; toggle project &harr; team</li>
+                    <li><strong>Edit summary</strong> &mdash; fix the text before approving</li>
+                </ul>
+                <p style="color: #94a3b8; font-size: clamp(0.9rem, 1.6vw, 1.1rem);">All actions logged to <code>data/sync/sync.db</code> for audit.</p>
+            </div>
+            <div>
+                <div class="code-block"><span class="comment"># cmm review --project supply-chain</span>
+
+<span class="output">[3/12]</span> HYPOTHESIS &middot; scope=project
+       confidence=0.78 &middot; by alice
        session=abc123
 
-Summary: The bug appears to be in the
-         migration runner — Alembic isn't
+<span class="cmd">Summary:</span> The bug appears to be in the
+         migration runner &mdash; Alembic isn't
          picking up new models.
 
-Evidence: ImportError raised at line 42 of
+<span class="cmd">Evidence:</span> ImportError raised at line 42 of
           alembic/env.py during autogen.
 
 [a]pprove  [r]eject  [s]wap-scope
-[e]dit     [k]skip   [q]uit       <span style="color: var(--accent);">›</span> <span style="color: var(--accent);">a</span>
-<span style="color: var(--accent);">✓ Approved</span></div>
+[e]dit     [k]skip   [q]uit       <span class="output">&rsaquo; a</span>
+<span class="output">Approved</span></div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="slide-num">10 / 14</div>
-</section>
+    <div class="slide-number">12 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 11: ONBOARDING ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Phase 6 · Onboarding</span>
-    <h2 class="reveal">A new developer in one command.</h2>
-    <div class="two-col">
-      <div class="reveal">
-        <p>Clone the repo, run one command, get the entire team's accumulated knowledge in your local cache. No tribal knowledge handoff. No "oh by the way, watch out for…" conversations.</p>
-        <br>
-        <p>The <span class="mono" style="color:var(--accent)">cmm init --shared</span> command writes the config, runs <span class="mono">cmm pull</span>, and refreshes the cached profile — all in under a minute.</p>
-        <br>
-        <p style="font-size: var(--small-size); color: var(--text-dim);">After init, every Claude Code session on this project automatically loads the team profile at startup via the session-start hook.</p>
-      </div>
-      <div class="code reveal"><span class="com"># Day 1 on a new team:</span>
-<span class="kw">$</span> git clone git@github.com:team/project
-<span class="kw">$</span> cd project
+<!-- Slide 13: Onboarding -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>New Developer in One Command</h2>
+        <div class="two-col">
+            <div>
+                <p>Clone the repo, run one command, get the entire team's accumulated knowledge locally.</p>
+                <p>No tribal knowledge handoff. No "oh by the way, watch out for&hellip;" conversations.</p>
+                <p style="color: #94a3b8; font-size: clamp(0.9rem, 1.6vw, 1.1rem);">After init, every Claude Code session automatically loads the team profile at startup via the session-start hook.</p>
+            </div>
+            <div>
+                <div class="code-block"><span class="comment"># Day 1 on a new team:</span>
+<span class="prompt">$</span> <span class="cmd">git clone</span> git@github.com:team/project
+<span class="prompt">$</span> <span class="cmd">cd</span> project
 
-<span class="kw">$</span> cmm init . \
+<span class="prompt">$</span> <span class="cmd">cmm init</span> . \
     --shared /shared/team/memory \
     --developer bob \
     --team-id logistics
 
-<span class="str">✓ Initialized: project-a3f2b1</span>
-<span class="str">  Mode: shared</span>
-<span class="str">  Pulling existing team memories...</span>
-<span class="str">  ✓ Pulled 34 project nodes</span>
-<span class="str">       + 15 team nodes</span>
-<span class="str">  ✓ Cached profile updated</span>
+<span class="output">Initialized: project-a3f2b1
+  Mode: shared
+  Pulling existing team memories...
+  Pulled 34 project nodes
+       + 15 team nodes
+  Cached profile updated</span>
 
-<span class="com"># That's it. Full team brain loaded.</span></div>
+<span class="comment"># Full team brain loaded.</span></div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="slide-num">11 / 14</div>
-</section>
+    <div class="slide-number">13 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 12: EVALUATION ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Evaluation</span>
-    <h2 class="reveal">Three signals for helpfulness.</h2>
-    <div class="card-grid reveal">
-      <div class="card accent">
-        <span class="label">Signal A</span>
-        <h3>Errors Resolved</h3>
-        <p>DEAD_END → memory retrieval → SOLUTION within 8 messages. Did memory help fix it?</p>
-      </div>
-      <div class="card accent">
-        <span class="label">Signal B</span>
-        <h3>Pitfalls Avoided</h3>
-        <p>Surfaced pitfall has no matching DEAD_END node in the session. Was the trap dodged?</p>
-      </div>
-      <div class="card accent">
-        <span class="label">Signal C</span>
-        <h3>Pivots After Retrieval</h3>
-        <p>PIVOT node within 5 messages of a search. Did memory change direction?</p>
-      </div>
+<!-- Slide 14: Evaluation -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Evaluation: Four Helpfulness Signals</h2>
+        <div class="pipeline-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <div class="pipeline-step" style="border-color: #059669;"><h3>Signal A: Errors Resolved</h3><p>DEAD_END &rarr; memory retrieval &rarr; SOLUTION within 8 messages</p></div>
+            <div class="pipeline-step"><h3>Signal B: Pitfalls Avoided</h3><p>Surfaced pitfall has no matching DEAD_END (embedding cosine &ge; 0.70)</p></div>
+            <div class="pipeline-step" style="border-color: #7c3aed;"><h3>Signal C: Pivots After Retrieval</h3><p>PIVOT within 5 messages of a /search-memory invocation</p></div>
+            <div class="pipeline-step" style="border-color: #dc2626;"><h3>Signal D: Harmful Memory</h3><p>Loaded memory semantically matches a subsequent DEAD_END &mdash; memory may have misled</p></div>
+        </div>
+        <p style="text-align: center; margin-top: 1.5rem; color: #94a3b8;">Position estimation uses real JSONL message counts at invocation time, not even-distribution guesses</p>
     </div>
-    <p class="reveal" style="margin-top: 1.5rem; font-size: var(--small-size); color: var(--text-dim);">Sessions split by <span class="mono">memory_used_at_start</span> — compare dead ends, pivots, messages-to-solution between cohorts. Audit trail in SQLite tracks every push, pull, approve, reject.</p>
-  </div>
-  <div class="slide-num">12 / 14</div>
-</section>
+    <div class="slide-number">14 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 13: METRICS ════════ -->
-<section class="slide">
-  <div class="slide-content">
-    <span class="tag reveal">Current State</span>
-    <h2 class="reveal">7 phases shipped.</h2>
-    <div class="stat-grid reveal">
-      <div class="stat">
-        <div class="num">178</div>
-        <span class="label">Tests passing across all 7 phases</span>
-      </div>
-      <div class="stat">
-        <div class="num alt">3</div>
-        <span class="label">Memory tiers: PROJECT, TEAM, STAGING</span>
-      </div>
-      <div class="stat">
-        <div class="num warn">45%</div>
-        <span class="label">Context fill ratio (research-backed)</span>
-      </div>
-      <div class="stat">
-        <div class="num blue">&lt;1min</div>
-        <span class="label">New developer to full team brain</span>
-      </div>
+<!-- Slide 15: Results -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Results: Controlled A/B Comparison</h2>
+        <p>Same task, same codebase, same starting state. Only variable: memory.</p>
+        <div class="results-grid">
+            <div class="result-card"><div class="number">193</div><div class="label">Tests Passing</div><p>16 test files across all 7 phases</p></div>
+            <div class="result-card"><div class="number green">+3</div><div class="label">Pitfalls Captured</div><p>Baseline: 0 pitfalls. Assisted: 3 (HIGH, HIGH, MED)</p></div>
+            <div class="result-card"><div class="number green">+1</div><div class="label">Insights Captured</div><p>Baseline: 0 insights. Assisted: 1 architectural</p></div>
+            <div class="result-card"><div class="number amber">&lt;1min</div><div class="label">Onboarding Time</div><p>New developer to full team brain</p></div>
+        </div>
+        <p style="text-align: center; margin-top: 2rem; font-size: clamp(1.05rem, 2vw, 1.35rem);"><strong>Verdict:</strong> Zero structured pitfalls without memory, three high-quality pitfalls with memory.</p>
     </div>
-    <br>
-    <ul class="bullets reveal" style="margin-top: 1rem;">
-      <li><strong>Stack:</strong> Python 3.12, Pydantic v2, ChromaDB, OpenAI embeddings, Anthropic SDK, FastMCP, Click, Rich, scikit-learn</li>
-      <li><strong>Backwards compatible</strong> — local-only mode is default; <span class="mono">persist_dir=</span> kwarg unchanged</li>
-      <li><strong>Fail-safe by design</strong> — sync logging never blocks operations, evaluation never blocks ingestion</li>
-      <li><strong>Audit trail</strong> — SQLite log records every push/pull/approve/reject with actor and timestamp</li>
-    </ul>
-  </div>
-  <div class="slide-num">13 / 14</div>
-</section>
+    <div class="slide-number">15 / 16</div>
+</div>
 
-<!-- ════════ SLIDE 14: CLOSE ════════ -->
-<section class="slide">
-  <div class="slide-content" style="justify-content: center; align-items: center; text-align: center;">
-    <span class="tag reveal">Thank You</span>
-    <h1 class="reveal" style="font-size: clamp(2rem, 7vw, 5rem); background: linear-gradient(135deg, #fff 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Memory makes<br>teams of agents<br>work like teams.</h1>
-    <p class="reveal" style="max-width: 60ch; margin: 1.5rem 0;">Token-budget extraction. Project / team scope. Distributed store with human review. Open source, MIT licensed, plug-and-play with Claude Code.</p>
-    <p class="author reveal mono" style="font-size: var(--small-size); color: var(--text-dim);">github.com/sazandkhalid/cmm · Sazan Khalid</p>
-  </div>
-  <div class="slide-num">14 / 14</div>
-</section>
+<!-- Slide 16: Summary -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Summary</h2>
+        <div class="summary-content">
+            <h3>Cognitive Memory Manager</h3>
+            <ul>
+                <li><strong>Token-budget extraction</strong> &mdash; 45% context fill ratio, 2&ndash;3 large windows instead of 30 tiny ones</li>
+                <li><strong>Two extraction tiers</strong> &mdash; warm (free, &lt;1s) for every session, cold (LLM) for on-demand upgrades</li>
+                <li><strong>Project / team scope</strong> &mdash; team-level knowledge crosses repo boundaries automatically</li>
+                <li><strong>Distributed store</strong> &mdash; local ChromaDB cache + shared team store on any filesystem</li>
+                <li><strong>Human-gated review</strong> &mdash; push/review/pull with full audit trail, prevents institutional hallucination</li>
+                <li><strong>Four evaluation signals</strong> &mdash; errors resolved, pitfalls avoided, pivots influenced, harmful memory tracked</li>
+                <li><strong>One-command onboarding</strong> &mdash; <code>cmm init --shared</code> gives a new developer the full team brain in under a minute</li>
+            </ul>
+        </div>
+        <p style="text-align: center; margin-top: 2.5rem; font-size: clamp(1.2rem, 2.3vw, 1.6rem); color: #1a1a1a;"><strong>Open source &middot; MIT licensed &middot; github.com/sazandkhalid/cmm</strong></p>
+    </div>
+    <div class="slide-number">16 / 16</div>
+</div>
 
 <script>
-class SlidePresentation {
-  constructor() {
-    this.slides = Array.from(document.querySelectorAll('.slide'));
-    this.current = 0;
-    this.observer();
-    this.keys();
-    this.progress();
-    this.dots();
-  }
-  observer() {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.intersectionRatio > 0.5) {
-          e.target.classList.add('visible');
-          this.current = this.slides.indexOf(e.target);
-          this.updateDots();
-          this.updateProgress();
-        }
-      });
-    }, { threshold: [0, 0.5, 1] });
-    this.slides.forEach(s => io.observe(s));
-  }
-  keys() {
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
-        e.preventDefault(); this.go(this.current + 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        e.preventDefault(); this.go(this.current - 1);
-      } else if (e.key === 'Home') { this.go(0); }
-      else if (e.key === 'End') { this.go(this.slides.length - 1); }
-    });
-  }
-  go(i) {
-    if (i < 0 || i >= this.slides.length) return;
-    this.slides[i].scrollIntoView({ behavior: 'smooth' });
-  }
-  progress() { this.bar = document.querySelector('.progress-bar'); }
-  updateProgress() {
-    const pct = ((this.current + 1) / this.slides.length) * 100;
-    this.bar.style.width = pct + '%';
-  }
-  dots() {
-    const nav = document.querySelector('.nav-dots');
-    this.slides.forEach((_, i) => {
-      const b = document.createElement('button');
-      b.className = 'dot';
-      b.setAttribute('aria-label', `Slide ${i + 1}`);
-      b.addEventListener('click', () => this.go(i));
-      nav.appendChild(b);
-    });
-    this.dotEls = nav.querySelectorAll('.dot');
-    this.updateDots();
-  }
-  updateDots() {
-    this.dotEls.forEach((d, i) => d.classList.toggle('active', i === this.current));
-  }
-}
-new SlidePresentation();
+const slides = document.querySelectorAll('.slide');
+const navDots = document.getElementById('navDots');
+let current = 0;
+slides.forEach((_, i) => { const d = document.createElement('button'); d.className = 'nav-dot' + (i===0?' active':''); d.addEventListener('click', () => goTo(i)); navDots.appendChild(d); });
+function goTo(i) { if (i<0||i>=slides.length) return; slides[i].scrollIntoView({behavior:'smooth'}); }
+function updateDots() { navDots.querySelectorAll('.nav-dot').forEach((d,i) => d.classList.toggle('active', i===current)); }
+const obs = new IntersectionObserver(es => { es.forEach(e => { if(e.intersectionRatio>0.5){current=Array.from(slides).indexOf(e.target);updateDots();}}); }, {threshold:[0,0.5,1]});
+slides.forEach(s => obs.observe(s));
+document.addEventListener('keydown', e => { if(e.key==='ArrowDown'||e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();goTo(current+1);} else if(e.key==='ArrowUp'||e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();goTo(current-1);} else if(e.key==='Home'){goTo(0);} else if(e.key==='End'){goTo(slides.length-1);} });
 </script>
 </body>
 </html>
