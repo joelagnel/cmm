@@ -52,6 +52,7 @@
         .workflow-box.warm { border-color: #d97706; } .workflow-box.warm h3 { color: #d97706; }
         .workflow-box.cold { border-color: #059669; } .workflow-box.cold h3 { color: #059669; }
         .workflow-box.review { border-color: #dc2626; } .workflow-box.review h3 { color: #dc2626; }
+        .workflow-box.cloud { border-color: #7c3aed; } .workflow-box.cloud h3 { color: #7c3aed; }
         .workflow-arrow { font-size: clamp(1.5rem, 3vw, 2.5rem); color: #2563eb; font-weight: 700; }
 
         .pipeline-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(1.5rem, 3vh, 2rem); margin-top: 2rem; }
@@ -72,13 +73,14 @@
         .benefits-list li::before { content: "\2713"; position: absolute; left: clamp(1rem, 2vw, 1.5rem); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: #059669; }
         .benefits-list strong { color: #1a1a1a; font-weight: 600; }
 
-        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: clamp(2rem, 4vh, 3rem); margin-top: 2rem; }
-        .result-card { background: #f8f9fa; padding: clamp(2rem, 4vh, 3rem); text-align: center; border-top: 4px solid #2563eb; }
-        .result-card .number { font-size: clamp(3rem, 6vw, 5rem); font-weight: 700; color: #2563eb; line-height: 1; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: clamp(1.5rem, 3vh, 2.5rem); margin-top: 2rem; }
+        .result-card { background: #f8f9fa; padding: clamp(1.5rem, 3vh, 2.5rem); text-align: center; border-top: 4px solid #2563eb; }
+        .result-card .number { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: #2563eb; line-height: 1; }
         .result-card .number.green { color: #059669; }
         .result-card .number.amber { color: #d97706; }
-        .result-card .label { font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 600; color: #1a1a1a; margin-top: 1rem; }
-        .result-card p { font-size: clamp(1rem, 1.8vw, 1.2rem); margin-top: 0.75rem; margin-bottom: 0; }
+        .result-card .number.red { color: #dc2626; }
+        .result-card .label { font-size: clamp(1rem, 1.8vw, 1.3rem); font-weight: 600; color: #1a1a1a; margin-top: 0.75rem; }
+        .result-card p { font-size: clamp(0.9rem, 1.6vw, 1.1rem); margin-top: 0.5rem; margin-bottom: 0; }
 
         .summary-content { background: #f8f9fa; padding: clamp(2rem, 4vh, 3rem); border-left: 4px solid #2563eb; }
         .summary-content h3 { color: #2563eb; }
@@ -97,13 +99,22 @@
         .node-badge .name { font-weight: 600; font-size: clamp(0.9rem, 1.6vw, 1.1rem); color: #1a1a1a; }
         .node-badge .desc { font-size: clamp(0.8rem, 1.4vw, 0.95rem); color: #4a5568; margin: 0; }
 
-        .dist-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(1.5rem, 3vw, 2.5rem); align-items: center; max-width: 950px; margin: 2rem auto 0; }
-        .dist-col { display: flex; flex-direction: column; gap: 0.75rem; }
-        .dist-box { background: #f8f9fa; border: 2px solid #e2e8f0; border-radius: 8px; padding: clamp(0.8rem, 1.5vh, 1.2rem); text-align: center; }
-        .dist-box .role { font-size: clamp(0.7rem, 1.2vw, 0.85rem); font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }
-        .dist-box.staging { border-color: #d97706; } .dist-box.staging .role { color: #d97706; }
-        .dist-box.shared { border-color: #059669; } .dist-box.shared .role { color: #059669; }
-        .dist-arrows { text-align: center; font-size: clamp(0.9rem, 1.6vw, 1.1rem); color: #4a5568; line-height: 1.8; }
+        /* Cloud architecture diagram */
+        .cloud-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: clamp(1rem, 2vw, 2rem); align-items: center; max-width: 980px; margin: 1.5rem auto 0; }
+        .cloud-col { display: flex; flex-direction: column; gap: 0.65rem; }
+        .cloud-box { background: #f8f9fa; border: 2px solid #e2e8f0; border-radius: 8px; padding: clamp(0.7rem, 1.4vh, 1rem); text-align: center; }
+        .cloud-box .role { font-size: clamp(0.7rem, 1.2vw, 0.85rem); font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }
+        .cloud-box.staging { border-color: #d97706; } .cloud-box.staging .role { color: #d97706; }
+        .cloud-box.shared { border-color: #7c3aed; } .cloud-box.shared .role { color: #7c3aed; }
+        .cloud-arrows { text-align: center; font-size: clamp(0.85rem, 1.5vw, 1rem); color: #4a5568; line-height: 2; }
+
+        /* Pitfall badges */
+        .pitfall-high { background: #fff1f2; border-left: 4px solid #dc2626; padding: 0.7rem 1rem; margin-bottom: 0.5rem; }
+        .pitfall-high .badge { display: inline-block; background: #dc2626; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; margin-right: 0.5rem; text-transform: uppercase; }
+        .pitfall-med { background: #fffbeb; border-left: 4px solid #d97706; padding: 0.7rem 1rem; margin-bottom: 0.5rem; }
+        .pitfall-med .badge { display: inline-block; background: #d97706; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; margin-right: 0.5rem; text-transform: uppercase; }
+        .insight-box { background: #f0fdf4; border-left: 4px solid #059669; padding: 0.7rem 1rem; margin-bottom: 0.5rem; }
+        .insight-box .badge { display: inline-block; background: #059669; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; margin-right: 0.5rem; text-transform: uppercase; }
 
         .slide-number { position: absolute; bottom: 2rem; right: 2rem; font-size: 0.9rem; color: #94a3b8; }
 
@@ -111,7 +122,7 @@
         .nav-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e0; cursor: pointer; transition: all 0.3s ease; border: none; padding: 0; }
         .nav-dot.active { background: #2563eb; transform: scale(1.4); }
 
-        @media (max-width: 768px) { .nav-dots { right: 1rem; } .pipeline-grid, .two-col { grid-template-columns: 1fr; } .dist-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .nav-dots { right: 1rem; } .pipeline-grid, .two-col { grid-template-columns: 1fr; } .cloud-grid { grid-template-columns: 1fr; } }
         @media print {
             @page { size: 1280px 720px; margin: 0; }
             html, body { width: 1280px; height: 720px; overflow: visible; }
@@ -133,10 +144,10 @@
     <div class="content-wrapper">
         <h1>Cognitive Memory Manager</h1>
         <p class="subtitle">Persistent reasoning memory for AI coding agents</p>
-        <p class="subtitle">Token-budgeted extraction, team-scale distributed store, human-gated knowledge sharing</p>
+        <p class="subtitle">Token-budgeted extraction &middot; team-scale Chroma Cloud store &middot; human-gated knowledge sharing</p>
         <p style="margin-top: 2rem; font-size: clamp(1rem, 1.8vw, 1.3rem); color: #94a3b8;">Sazan Khalid &middot; Applied ML Conference 2026 &middot; github.com/sazandkhalid/cmm</p>
     </div>
-    <div class="slide-number">1 / 16</div>
+    <div class="slide-number">1 / 17</div>
 </div>
 
 <!-- Slide 2: The Problem -->
@@ -148,7 +159,7 @@
         <div class="problem-item"><h3>No Cross-Developer Transfer</h3><p>Alice's agent learns a pitfall on Tuesday. Bob's agent rediscovers it on Thursday. The team pays twice</p></div>
         <div class="problem-item"><h3>Onboarding Is Manual</h3><p>New developers spend weeks absorbing tribal knowledge that agents could have accumulated automatically</p></div>
     </div>
-    <div class="slide-number">2 / 16</div>
+    <div class="slide-number">2 / 17</div>
 </div>
 
 <!-- Slide 3: The Solution -->
@@ -162,7 +173,7 @@
         </div>
         <p style="text-align: center; font-size: clamp(1.1rem, 2.2vw, 1.5rem); color: #1a1a1a;"><strong>Extract reasoning DAGs &rarr; Consolidate into durable knowledge &rarr; Share with human review</strong></p>
     </div>
-    <div class="slide-number">3 / 16</div>
+    <div class="slide-number">3 / 17</div>
 </div>
 
 <!-- Slide 4: Architecture -->
@@ -186,7 +197,7 @@
         </div>
         <div style="margin-top: 2rem;"><p style="text-align: center; font-size: clamp(1.05rem, 2vw, 1.35rem); color: #2d3748;"><strong>Key Innovation:</strong> Two-tier extraction with token-budget windowing at 45% context utilization</p></div>
     </div>
-    <div class="slide-number">4 / 16</div>
+    <div class="slide-number">4 / 17</div>
 </div>
 
 <!-- Slide 5: Reasoning DAG -->
@@ -204,7 +215,7 @@
         </div>
         <p style="margin-top: 1.5rem;">Edges: <code>led_to</code>, <code>refined</code>, <code>contradicted</code>, <code>caused_pivot_to</code>, <code>resolved</code>. Pivots and dead ends are first-class &mdash; often the most valuable signals.</p>
     </div>
-    <div class="slide-number">5 / 16</div>
+    <div class="slide-number">5 / 17</div>
 </div>
 
 <!-- Slide 6: Two-Tier Extraction -->
@@ -226,7 +237,7 @@
         </div>
         <p style="text-align: center;">Warm tier is always-on. Cold tier upgrades quality when you invest API spend.</p>
     </div>
-    <div class="slide-number">6 / 16</div>
+    <div class="slide-number">6 / 17</div>
 </div>
 
 <!-- Slide 7: Token-Budget Windowing -->
@@ -248,7 +259,7 @@
             </div>
         </div>
     </div>
-    <div class="slide-number">7 / 16</div>
+    <div class="slide-number">7 / 17</div>
 </div>
 
 <!-- Slide 8: Knowledge Consolidation -->
@@ -263,7 +274,7 @@
         </div>
         <p style="text-align: center; margin-top: 2rem;">Plus <strong>key patterns</strong> (recurring successes) and <strong>anti-patterns</strong> (approaches that consistently fail)</p>
     </div>
-    <div class="slide-number">8 / 16</div>
+    <div class="slide-number">8 / 17</div>
 </div>
 
 <!-- Slide 9: Memory Scope -->
@@ -274,40 +285,50 @@
         <div class="two-col" style="margin-top: 1.5rem;">
             <div style="background: #f0f9ff; padding: 1.5rem; border-left: 4px solid #2563eb;">
                 <h3 style="color: #2563eb;">PROJECT Scope</h3>
-                <p><em>"The supply-chain project's Alembic migrations require all models to be registered in <code>models/__init__.py</code> for autodetect to work."</em></p>
+                <p><em>"The supply-chain app's offline sync uses an append-only ShipmentEvent table with client-generated UUIDs &mdash; new features must use this subsystem, not introduce alternatives."</em></p>
                 <p style="color: #94a3b8; margin-bottom: 0;">Useless for any other repo.</p>
             </div>
             <div style="background: #f0fdf4; padding: 1.5rem; border-left: 4px solid #059669;">
                 <h3 style="color: #059669;">TEAM Scope</h3>
-                <p><em>"Pydantic v2 requires migrating from <code>class Config</code> to <code>model_config = ConfigDict(...)</code>. Old patterns silently work but emit deprecation warnings."</em></p>
-                <p style="color: #94a3b8; margin-bottom: 0;">Applies to every Python project using Pydantic.</p>
+                <p><em>"Dockerfile CMD in exec form (JSON array) does not expand <code>$PORT</code> &mdash; use <code>sh -c</code> wrapper or read the variable at Python runtime."</em></p>
+                <p style="color: #94a3b8; margin-bottom: 0;">Applies to every containerised project.</p>
             </div>
         </div>
         <p style="text-align: center; margin-top: 2rem;">Team-scope memories cross project boundaries automatically on <code>cmm pull</code>.</p>
     </div>
-    <div class="slide-number">9 / 16</div>
+    <div class="slide-number">9 / 17</div>
 </div>
 
-<!-- Slide 10: Distributed Architecture -->
+<!-- Slide 10: Chroma Cloud Architecture -->
 <div class="slide">
     <div class="content-wrapper">
-        <h2>Distributed Memory Architecture</h2>
-        <p>Every developer keeps a fast local ChromaDB cache. A second ChromaDB on shared storage enables team knowledge sharing.</p>
-        <div class="dist-grid">
-            <div class="dist-col">
-                <div class="dist-box"><span class="role">Developer</span><br>Alice &mdash; local store</div>
-                <div class="dist-box"><span class="role">Developer</span><br>Bob &mdash; local store</div>
-                <div class="dist-box"><span class="role">Developer</span><br>Carol &mdash; local store</div>
+        <h2>Chroma Cloud &mdash; Shared Memory Backend</h2>
+        <p>Each developer keeps a fast <strong>local</strong> ChromaDB cache. A hosted <strong>Chroma Cloud</strong> database is the team-wide shared store.</p>
+        <div class="cloud-grid">
+            <div class="cloud-col">
+                <div class="cloud-box"><span class="role">Developer</span><br>Alice &mdash; local store</div>
+                <div class="cloud-box"><span class="role">Developer</span><br>Bob &mdash; local store</div>
+                <div class="cloud-box"><span class="role">Developer</span><br>Carol &mdash; local store</div>
             </div>
-            <div class="dist-arrows"><strong>push &rarr;</strong><br><strong>&larr; pull</strong><br><span style="font-size: 0.85rem; color: #94a3b8;">approved only</span></div>
-            <div class="dist-col">
-                <div class="dist-box staging"><span class="role">Staging</span><br>Pending human review</div>
-                <div class="dist-box shared"><span class="role">Main</span><br>Approved &amp; team-visible</div>
-                <div class="dist-box shared"><span class="role">Profiles</span><br>Distilled knowledge</div>
+            <div class="cloud-arrows">
+                <strong>push &rarr;</strong><br>
+                <strong>&larr; pull</strong><br>
+                <span style="font-size: 0.8rem; color: #94a3b8;">approved only</span>
+            </div>
+            <div class="cloud-col">
+                <div class="cloud-box staging"><span class="role">Staging</span><br>Pending human review</div>
+                <div class="cloud-box shared"><span class="role">Main</span><br>Approved &amp; team-visible</div>
+                <div class="cloud-box shared"><span class="role">Profiles</span><br>Distilled knowledge</div>
             </div>
         </div>
+        <div style="background: #f5f3ff; border: 1px solid #7c3aed; border-radius: 6px; padding: 0.75rem 1rem; margin-top: 1.5rem; display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+            <span style="font-size: clamp(0.85rem, 1.5vw, 1rem); color: #5b21b6; font-family: 'Courier New', monospace;">CMM_CHROMA_API_KEY=ck-...</span>
+            <span style="font-size: clamp(0.85rem, 1.5vw, 1rem); color: #5b21b6; font-family: 'Courier New', monospace;">CMM_CHROMA_TENANT=&lt;uuid&gt;</span>
+            <span style="font-size: clamp(0.85rem, 1.5vw, 1rem); color: #5b21b6; font-family: 'Courier New', monospace;">CMM_CHROMA_DATABASE=cmm</span>
+        </div>
+        <p style="text-align: center; margin-top: 1rem; font-size: clamp(0.9rem, 1.6vw, 1.1rem); color: #94a3b8;">API key is never stored in config files &mdash; environment variable only</p>
     </div>
-    <div class="slide-number">10 / 16</div>
+    <div class="slide-number">10 / 17</div>
 </div>
 
 <!-- Slide 11: Push / Review / Pull -->
@@ -323,14 +344,14 @@
                 <div class="workflow-arrow">&rarr;</div>
                 <div class="workflow-box review"><h3>cmm review</h3><p>Approve / Reject</p></div>
                 <div class="workflow-arrow">&rarr;</div>
-                <div class="workflow-box cold"><h3>Shared Main</h3><p>Approved nodes</p></div>
+                <div class="workflow-box cloud"><h3>Chroma Cloud</h3><p>Approved nodes</p></div>
                 <div class="workflow-arrow">&rarr;</div>
-                <div class="workflow-box"><h3>cmm pull</h3><p>Other developers</p></div>
+                <div class="workflow-box"><h3>cmm pull</h3><p>All developers</p></div>
             </div>
         </div>
         <p style="margin-top: 2rem; text-align: center;"><strong>Why the gate?</strong> Without review, one agent's hallucinated insight becomes institutional false knowledge for the entire team.</p>
     </div>
-    <div class="slide-number">11 / 16</div>
+    <div class="slide-number">11 / 17</div>
 </div>
 
 <!-- Slide 12: Review UI -->
@@ -341,7 +362,7 @@
             <div>
                 <p>Reviewers see full context: type, scope, confidence, source developer, session ID, evidence.</p>
                 <ul class="benefits-list" style="margin-top: 1rem;">
-                    <li><strong>Approve</strong> &mdash; promotes to shared main</li>
+                    <li><strong>Approve</strong> &mdash; promotes to Chroma Cloud main collection</li>
                     <li><strong>Reject</strong> &mdash; soft delete with audit reason</li>
                     <li><strong>Swap scope</strong> &mdash; toggle project &harr; team</li>
                     <li><strong>Edit summary</strong> &mdash; fix the text before approving</li>
@@ -355,20 +376,23 @@
        confidence=0.78 &middot; by alice
        session=abc123
 
-<span class="cmd">Summary:</span> The bug appears to be in the
-         migration runner &mdash; Alembic isn't
-         picking up new models.
+<span class="cmd">Summary:</span> AWS credentials are not available
+         in Railway by default &mdash; DynamoDB
+         calls fail with 503 at runtime.
 
-<span class="cmd">Evidence:</span> ImportError raised at line 42 of
-          alembic/env.py during autogen.
+<span class="cmd">Evidence:</span> "Unable to locate credentials"
+          raised in production after successful
+          local deployment.
 
 [a]pprove  [r]eject  [s]wap-scope
-[e]dit     [k]skip   [q]uit       <span class="output">&rsaquo; a</span>
+[e]dit     [k]skip   [q]uit       <span class="output">&rsaquo; s</span>
+<span class="output">Scope flipped: project &rarr; team</span>
+[a]pprove  [r]eject  ...          <span class="output">&rsaquo; a</span>
 <span class="output">Approved</span></div>
             </div>
         </div>
     </div>
-    <div class="slide-number">12 / 16</div>
+    <div class="slide-number">12 / 17</div>
 </div>
 
 <!-- Slide 13: Onboarding -->
@@ -377,32 +401,35 @@
         <h2>New Developer in One Command</h2>
         <div class="two-col">
             <div>
-                <p>Clone the repo, run one command, get the entire team's accumulated knowledge locally.</p>
+                <p>Set three environment variables, run one command, get the entire team's accumulated knowledge locally &mdash; including all team-scope nodes from every project.</p>
                 <p>No tribal knowledge handoff. No "oh by the way, watch out for&hellip;" conversations.</p>
                 <p style="color: #94a3b8; font-size: clamp(0.9rem, 1.6vw, 1.1rem);">After init, every Claude Code session automatically loads the team profile at startup via the session-start hook.</p>
             </div>
             <div>
-                <div class="code-block"><span class="comment"># Day 1 on a new team:</span>
-<span class="prompt">$</span> <span class="cmd">git clone</span> git@github.com:team/project
-<span class="prompt">$</span> <span class="cmd">cd</span> project
+                <div class="code-block"><span class="comment"># Add once to shell profile</span>
+<span class="prompt">$</span> <span class="cmd">export</span> CMM_CHROMA_API_KEY=<span class="output">"ck-..."</span>
+<span class="prompt">$</span> <span class="cmd">export</span> CMM_CHROMA_TENANT=<span class="output">"b8446dcc-..."</span>
+<span class="prompt">$</span> <span class="cmd">export</span> CMM_CHROMA_DATABASE=<span class="output">"cmm"</span>
 
+<span class="comment"># Day 1 on a new project</span>
+<span class="prompt">$</span> <span class="cmd">git clone</span> git@github.com:team/project
 <span class="prompt">$</span> <span class="cmd">cmm init</span> . \
-    --shared /shared/team/memory \
-    --developer bob \
-    --team-id logistics
+    --cloud-tenant <span class="output">"$CMM_CHROMA_TENANT"</span> \
+    --cloud-database cmm \
+    --developer bob
 
 <span class="output">Initialized: project-a3f2b1
-  Mode: shared
+  Mode: cloud (Chroma Cloud)
   Pulling existing team memories...
-  Pulled 34 project nodes
+  ✓ Pulled 34 project nodes
        + 15 team nodes
-  Cached profile updated</span>
+  ✓ Cached profile updated</span>
 
 <span class="comment"># Full team brain loaded.</span></div>
             </div>
         </div>
     </div>
-    <div class="slide-number">13 / 16</div>
+    <div class="slide-number">13 / 17</div>
 </div>
 
 <!-- Slide 14: Evaluation -->
@@ -415,28 +442,71 @@
             <div class="pipeline-step" style="border-color: #7c3aed;"><h3>Signal C: Pivots After Retrieval</h3><p>PIVOT within 5 messages of a /search-memory invocation</p></div>
             <div class="pipeline-step" style="border-color: #dc2626;"><h3>Signal D: Harmful Memory</h3><p>Loaded memory semantically matches a subsequent DEAD_END &mdash; memory may have misled</p></div>
         </div>
-        <p style="text-align: center; margin-top: 1.5rem; color: #94a3b8;">Position estimation uses real JSONL message counts at invocation time, not even-distribution guesses</p>
+        <div style="background: #f0f9ff; border-left: 4px solid #2563eb; padding: 1rem 1.5rem; margin-top: 1.5rem;">
+            <p style="margin: 0;"><strong>Profile quality</strong> runs automatically after every ingestion: <strong>Staleness</strong> (file paths still exist?), <strong>Redundancy</strong> (pairwise cosine &gt; 0.85?), <strong>Coverage</strong> (sessions contributing to profile)</p>
+        </div>
     </div>
-    <div class="slide-number">14 / 16</div>
+    <div class="slide-number">14 / 17</div>
 </div>
 
-<!-- Slide 15: Results -->
+<!-- Slide 15: Supply Chain Case Study -->
+<div class="slide">
+    <div class="content-wrapper">
+        <h2>Case Study: Iraq Logistics Simulation Platform</h2>
+        <p style="margin-bottom: 1rem;">4 sessions ingested into the supply-chain project &rarr; CMM produced a cognitive profile with actionable, specific knowledge:</p>
+        <div class="two-col">
+            <div>
+                <p style="font-size: clamp(0.95rem, 1.7vw, 1.1rem); font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">PITFALLS EXTRACTED</p>
+                <div class="pitfall-high"><span class="badge">HIGH</span>AWS credentials not provisioned in Railway &mdash; add <code>AWS_ACCESS_KEY_ID</code> as env var</div>
+                <div class="pitfall-high"><span class="badge">HIGH</span>Dockerfile <code>CMD $PORT</code> fails in exec form &mdash; use <code>sh -c</code> or runtime <code>os.environ</code></div>
+                <div class="pitfall-high"><span class="badge">HIGH</span><code>db.rollback()</code> in batch ops rolls back entire transaction &mdash; use savepoints</div>
+                <div class="pitfall-med"><span class="badge">MED</span>Backend files untracked if <code>.gitignore</code> misconfigured &mdash; run <code>git status</code> first</div>
+            </div>
+            <div>
+                <p style="font-size: clamp(0.95rem, 1.7vw, 1.1rem); font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">INSIGHTS EXTRACTED</p>
+                <div class="insight-box"><span class="badge">INSIGHT</span>Offline sync uses append-only ShipmentEvent table with client UUIDs &mdash; new features must leverage this, not reinvent it</div>
+                <div class="insight-box"><span class="badge">INSIGHT</span>Split deployment: two FastAPI apps on Railway (PostgreSQL) + frontend on GitHub Pages &mdash; cross-origin config required</div>
+                <div class="insight-box"><span class="badge">INSIGHT</span>WhatsApp notifier and offline sync router are pre-built &mdash; integrate rather than rebuild</div>
+                <p style="font-size: clamp(0.85rem, 1.5vw, 1rem); color: #94a3b8; margin-bottom: 0;">Also: 3 diagnostic strategies (85%/80%/72% success rates) &middot; 5 key patterns &middot; 5 anti-patterns</p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">15 / 17</div>
+</div>
+
+<!-- Slide 16: Results -->
 <div class="slide">
     <div class="content-wrapper">
         <h2>Results: Controlled A/B Comparison</h2>
-        <p>Same task, same codebase, same starting state. Only variable: memory.</p>
+        <p>Same task, same codebase, same starting state. Only variable: memory injected at session start.</p>
         <div class="results-grid">
-            <div class="result-card"><div class="number">193</div><div class="label">Tests Passing</div><p>16 test files across all 7 phases</p></div>
-            <div class="result-card"><div class="number green">+3</div><div class="label">Pitfalls Captured</div><p>Baseline: 0 pitfalls. Assisted: 3 (HIGH, HIGH, MED)</p></div>
-            <div class="result-card"><div class="number green">+1</div><div class="label">Insights Captured</div><p>Baseline: 0 insights. Assisted: 1 architectural</p></div>
-            <div class="result-card"><div class="number amber">&lt;1min</div><div class="label">Onboarding Time</div><p>New developer to full team brain</p></div>
+            <div class="result-card">
+                <div class="number">193</div>
+                <div class="label">Tests Passing</div>
+                <p>16 test files covering all phases, no API keys required</p>
+            </div>
+            <div class="result-card">
+                <div class="number green">7</div>
+                <div class="label">Solutions Found</div>
+                <p>Assisted session: 7 SOLUTION nodes.<br>Baseline: 0 solutions, 1 hypothesis</p>
+            </div>
+            <div class="result-card">
+                <div class="number green">+3</div>
+                <div class="label">Pitfalls Captured</div>
+                <p>Baseline profile: 0 pitfalls.<br>Assisted profile: 3 (HIGH, HIGH, MED)</p>
+            </div>
+            <div class="result-card">
+                <div class="number amber">22 vs 3</div>
+                <div class="label">Reasoning Nodes</div>
+                <p>Assisted session generated 7&times; more reasoning structure on the deployment task</p>
+            </div>
         </div>
-        <p style="text-align: center; margin-top: 2rem; font-size: clamp(1.05rem, 2vw, 1.35rem);"><strong>Verdict:</strong> Zero structured pitfalls without memory, three high-quality pitfalls with memory.</p>
+        <p style="text-align: center; margin-top: 1.5rem; font-size: clamp(1.05rem, 2vw, 1.35rem);"><strong>Profile verdict: <span style="color: #059669;">assisted_richer</span></strong> &mdash; 1 architectural insight + 3 pitfalls vs. zero structured knowledge without memory.</p>
     </div>
-    <div class="slide-number">15 / 16</div>
+    <div class="slide-number">16 / 17</div>
 </div>
 
-<!-- Slide 16: Summary -->
+<!-- Slide 17: Summary -->
 <div class="slide">
     <div class="content-wrapper">
         <h2>Summary</h2>
@@ -446,15 +516,15 @@
                 <li><strong>Token-budget extraction</strong> &mdash; 45% context fill ratio, 2&ndash;3 large windows instead of 30 tiny ones</li>
                 <li><strong>Two extraction tiers</strong> &mdash; warm (free, &lt;1s) for every session, cold (LLM) for on-demand upgrades</li>
                 <li><strong>Project / team scope</strong> &mdash; team-level knowledge crosses repo boundaries automatically</li>
-                <li><strong>Distributed store</strong> &mdash; local ChromaDB cache + shared team store on any filesystem</li>
+                <li><strong>Chroma Cloud backend</strong> &mdash; local ChromaDB cache + hosted shared store, zero infrastructure to manage</li>
                 <li><strong>Human-gated review</strong> &mdash; push/review/pull with full audit trail, prevents institutional hallucination</li>
                 <li><strong>Four evaluation signals</strong> &mdash; errors resolved, pitfalls avoided, pivots influenced, harmful memory tracked</li>
-                <li><strong>One-command onboarding</strong> &mdash; <code>cmm init --shared</code> gives a new developer the full team brain in under a minute</li>
+                <li><strong>One-command onboarding</strong> &mdash; <code>cmm init --cloud-tenant &hellip;</code> gives a new developer the full team brain in under a minute</li>
             </ul>
         </div>
-        <p style="text-align: center; margin-top: 2.5rem; font-size: clamp(1.2rem, 2.3vw, 1.6rem); color: #1a1a1a;"><strong>Open source &middot; MIT licensed &middot; github.com/sazandkhalid/cmm</strong></p>
+        <p style="text-align: center; margin-top: 2rem; font-size: clamp(1.2rem, 2.3vw, 1.6rem); color: #1a1a1a;"><strong>Open source &middot; MIT licensed &middot; github.com/sazandkhalid/cmm</strong></p>
     </div>
-    <div class="slide-number">16 / 16</div>
+    <div class="slide-number">17 / 17</div>
 </div>
 
 <script>
