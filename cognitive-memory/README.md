@@ -82,7 +82,13 @@ export CMM_STORE_PATH="~/.cognitive-memory/store"
 export CMM_PROJECT_ID="my-project"
 export CMM_CONTEXT_FILL_RATIO="0.45"
 
-# For shared/team mode
+# For shared/team mode — Chroma Cloud (recommended)
+export CMM_CHROMA_API_KEY="ck-..."          # Chroma Cloud API key
+export CMM_CHROMA_TENANT="<tenant-uuid>"    # Chroma Cloud tenant ID
+export CMM_CHROMA_DATABASE="cmm"            # Chroma Cloud database name
+export CMM_DEVELOPER_NAME="yourname"
+
+# For shared/team mode — filesystem (self-hosted alternative)
 export CMM_SHARED_STORE_PATH="/shared/team/memory_store"
 export CMM_DEVELOPER_NAME="yourname"
 ```
@@ -164,11 +170,18 @@ After init, Claude Code can use these slash commands:
 | `/consolidate` | Trigger cold-tier profile rebuild |
 | `/visualize-dag` | Interactive reasoning graph |
 
-### Team Mode (shared store)
+### Team Mode (Chroma Cloud — recommended)
 
 ```bash
-# Developer 1: Initialize with shared store
-cmm init . --shared /shared/team/memory --developer alice
+# Set credentials once (add to your shell profile)
+export CMM_CHROMA_API_KEY="ck-..."
+export CMM_CHROMA_TENANT="<tenant-uuid>"
+export CMM_CHROMA_DATABASE="cmm"
+
+# Developer 1: Initialize with Chroma Cloud shared store
+cmm init . --cloud-tenant "$CMM_CHROMA_TENANT" \
+           --cloud-database "$CMM_CHROMA_DATABASE" \
+           --developer alice
 
 # Push new local memories to shared staging
 cmm push --project my-project
@@ -176,15 +189,34 @@ cmm push --project my-project
 # Reviewer: approve or reject staged memories
 cmm review --project my-project
 
-# Developer 2: Pull approved memories (including team-scope)
+# Developer 2: Same init, then pull approved memories
+cmm init . --cloud-tenant "$CMM_CHROMA_TENANT" \
+           --cloud-database "$CMM_CHROMA_DATABASE" \
+           --developer bob
 cmm pull --project my-project
 
 # Check sync status
 cmm status
 ```
 
-The shared store has a staging area with human-in-the-loop review:
-pushed nodes must be approved before they become team-visible.
+The shared store (hosted on Chroma Cloud) has a staging area with
+human-in-the-loop review: pushed nodes must be approved before they
+become team-visible.
+
+The Chroma Cloud API key is **never stored in config files** — only
+read from the `CMM_CHROMA_API_KEY` environment variable.
+
+### Team Mode (filesystem — self-hosted alternative)
+
+```bash
+# Developer 1: Initialize with a shared filesystem path
+cmm init . --shared /shared/team/memory --developer alice
+
+# Push / review / pull work the same as cloud mode
+cmm push --project my-project
+cmm review --project my-project
+cmm pull --project my-project
+```
 
 ### Memory Scope
 
@@ -247,7 +279,9 @@ python scripts/controlled_comparison.py \
 
 ```
 cmm init [dir]                Initialize .cognitive/ folder
-    --shared PATH             Enable shared mode + auto-pull
+    --cloud-tenant UUID       Enable Chroma Cloud shared mode (tenant ID)
+    --cloud-database NAME     Chroma Cloud database (default: cmm)
+    --shared PATH             Enable filesystem shared mode + auto-pull
     --developer NAME          Your name for attribution
     --team-id ID              Team identifier
 
