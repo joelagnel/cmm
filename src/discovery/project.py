@@ -1,10 +1,10 @@
-"""Project discovery via .cognitive/ folder.
+"""Project discovery via .cmm/ folder.
 
-The .cognitive/ folder in a project root is the self-discovery mechanism.
+The .cmm/ folder in a project root is the self-discovery mechanism.
 It tells any session: "this project has cognitive memory — here's how to find it."
 
 Structure:
-    .cognitive/
+    .cmm/
     ├── manifest.json      # project identity + metadata
     ├── llms.txt           # structured metadata for agent consumption
     ├── cached_profile.md  # latest cognitive profile in markdown
@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 
-_COGNITIVE_DIR = ".cognitive"
+_COGNITIVE_DIR = ".cmm"
 _MANIFEST_FILE = "manifest.json"
 _CONFIG_FILE = "config.json"
 _CACHED_PROFILE_FILE = "cached_profile.md"
@@ -130,7 +130,7 @@ class CognitiveProject:
 
     @classmethod
     def init(cls, project_dir: Path, store_path: str | None = None) -> "CognitiveProject":
-        """Initialize a .cognitive/ folder in the project directory."""
+        """Initialize a .cmm/ folder in the project directory."""
         project_dir = project_dir.resolve()
         project_id = generate_project_id(project_dir)
         repo_name = _get_repo_name(project_dir)
@@ -157,7 +157,7 @@ class CognitiveProject:
             session_count=0,
         )
 
-        # Create .cognitive/ directory
+        # Create .cmm/ directory
         proj.cognitive_dir.mkdir(parents=True, exist_ok=True)
 
         # Write manifest
@@ -209,14 +209,14 @@ class CognitiveProject:
 
     @classmethod
     def load(cls, project_dir: Path) -> "CognitiveProject":
-        """Load an existing .cognitive/ folder."""
+        """Load an existing .cmm/ folder."""
         project_dir = project_dir.resolve()
         cognitive_dir = project_dir / _COGNITIVE_DIR
         manifest_path = cognitive_dir / _MANIFEST_FILE
 
         if not manifest_path.exists():
             raise FileNotFoundError(
-                f"No .cognitive/ folder found in {project_dir}. Run 'cmm init' first."
+                f"No .cmm/ folder found in {project_dir}. Run 'cmm init' first."
             )
 
         manifest = json.loads(manifest_path.read_text())
@@ -237,7 +237,7 @@ class CognitiveProject:
 
 
 def discover_project(start_dir: Path | None = None) -> CognitiveProject | None:
-    """Walk up from start_dir looking for a .cognitive/ folder.
+    """Walk up from start_dir looking for a .cmm/ folder.
 
     Returns CognitiveProject if found, None otherwise.
     This is the main entry point for automatic discovery.

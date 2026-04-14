@@ -343,6 +343,11 @@ class MemoryStore:
             [i.insight for i in profile.architectural_insights]
             + [p.description for p in profile.pitfalls]
         )
+        # OpenAI text-embedding-3-small has an 8192-token limit.
+        # Truncate by word count as a cheap proxy (~4 chars/token → ~6000 words safe).
+        words = text.split()
+        if len(words) > 6000:
+            text = " ".join(words[:6000])
         embedding = self.embed([text])[0]
 
         self.profiles_col.upsert(

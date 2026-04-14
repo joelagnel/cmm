@@ -1,4 +1,4 @@
-"""Tests for project discovery, .cognitive/ folder, and hooks — Phase 5 exit criteria."""
+"""Tests for project discovery, .cmm/ folder, and hooks — Phase 5 exit criteria."""
 import json
 import pytest
 from pathlib import Path
@@ -53,17 +53,17 @@ def test_generate_project_id_changes_with_readme(tmp_path):
 
 
 def test_init_creates_cognitive_dir(tmp_path):
-    """cmm init creates .cognitive/ with all required files."""
+    """cmm init creates .cmm/ with all required files."""
     project = tmp_path / "test-project"
     project.mkdir()
     (project / "README.md").write_text("# Test Project\nA test.")
 
     proj = CognitiveProject.init(project)
 
-    assert (project / ".cognitive").is_dir()
-    assert (project / ".cognitive" / "manifest.json").exists()
-    assert (project / ".cognitive" / "config.json").exists()
-    assert (project / ".cognitive" / "cached_profile.md").exists()
+    assert (project / ".cmm").is_dir()
+    assert (project / ".cmm" / "manifest.json").exists()
+    assert (project / ".cmm" / "config.json").exists()
+    assert (project / ".cmm" / "cached_profile.md").exists()
 
 
 def test_init_manifest_content(tmp_path):
@@ -73,7 +73,7 @@ def test_init_manifest_content(tmp_path):
     (project / "README.md").write_text("# My App\nSome description here.")
 
     proj = CognitiveProject.init(project)
-    manifest = json.loads((project / ".cognitive" / "manifest.json").read_text())
+    manifest = json.loads((project / ".cmm" / "manifest.json").read_text())
 
     assert manifest["name"] == "test-project"
     assert manifest["project_id"] == proj.project_id
@@ -88,7 +88,7 @@ def test_init_config_defaults(tmp_path):
     project.mkdir()
 
     proj = CognitiveProject.init(project)
-    config = json.loads((project / ".cognitive" / "config.json").read_text())
+    config = json.loads((project / ".cmm" / "config.json").read_text())
 
     assert config["auto_ingest"] is True
     assert config["auto_retrieve"] is True
@@ -102,7 +102,7 @@ def test_init_with_store_path(tmp_path):
     project.mkdir()
 
     proj = CognitiveProject.init(project, store_path="/custom/store")
-    config = json.loads((project / ".cognitive" / "config.json").read_text())
+    config = json.loads((project / ".cmm" / "config.json").read_text())
 
     assert config["store_path"] == "/custom/store"
 
@@ -127,8 +127,8 @@ def test_load_existing_project(tmp_path):
 
 
 def test_load_nonexistent_raises(tmp_path):
-    """Loading from a directory without .cognitive/ raises FileNotFoundError."""
-    with pytest.raises(FileNotFoundError, match="No .cognitive/ folder"):
+    """Loading from a directory without .cmm/ raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError, match="No .cmm/ folder"):
         CognitiveProject.load(tmp_path)
 
 
@@ -136,7 +136,7 @@ def test_load_nonexistent_raises(tmp_path):
 
 
 def test_discover_project_finds_in_current_dir(tmp_path):
-    """discover_project finds .cognitive/ in the given directory."""
+    """discover_project finds .cmm/ in the given directory."""
     project = tmp_path / "my-project"
     project.mkdir()
     CognitiveProject.init(project)
@@ -161,7 +161,7 @@ def test_discover_project_walks_up(tmp_path):
 
 
 def test_discover_project_returns_none_when_missing(tmp_path):
-    """discover_project returns None when no .cognitive/ exists."""
+    """discover_project returns None when no .cmm/ exists."""
     found = discover_project(tmp_path)
     assert found is None
 
@@ -246,14 +246,14 @@ def test_detect_stack(tmp_path):
 
 
 def test_session_start_hook_no_cognitive_dir(tmp_path):
-    """Start hook returns helpful message when no .cognitive/ exists."""
+    """Start hook returns helpful message when no .cmm/ exists."""
     output = session_start_hook(tmp_path)
     assert "No cognitive memory found" in output
     assert "cmm init" in output
 
 
 def test_session_start_hook_with_cognitive_dir(tmp_path):
-    """Start hook returns cached profile content when .cognitive/ exists."""
+    """Start hook returns cached profile content when .cmm/ exists."""
     project = tmp_path / "test-project"
     project.mkdir()
     proj = CognitiveProject.init(project)
@@ -270,10 +270,10 @@ def test_session_start_hook_with_cognitive_dir(tmp_path):
 
 
 def test_session_stop_hook_no_cognitive_dir(tmp_path):
-    """Stop hook skips when no .cognitive/ exists."""
+    """Stop hook skips when no .cmm/ exists."""
     result = session_stop_hook(tmp_path)
     assert result["status"] == "skipped"
-    assert "no .cognitive/" in result["reason"]
+    assert "no .cmm/" in result["reason"]
 
 
 def test_session_stop_hook_auto_ingest_disabled(tmp_path):

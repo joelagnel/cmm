@@ -111,7 +111,7 @@ Developer B: cmm pull
 
 ```
 Claude Code session starts
-  → session_start_hook reads .cognitive/cached_profile.md
+  → session_start_hook reads .cmm/cached_profile.md
   → MemoryStore.search() with project llms.txt as query
   → inject profile + relevant memories into agent context
 ```
@@ -462,10 +462,10 @@ Commands: `profile`, `pitfalls`, `search <query>`, `diagnose <problem>`
 
 ### `src/discovery/project.py` — CognitiveProject
 
-A `.cognitive/` folder in the repo root makes a project self-describing.
+A `.cmm/` folder in the repo root makes a project self-describing.
 
 ```
-.cognitive/
+.cmm/
 ├── manifest.json       # project_id, name, description, session_count
 ├── config.json         # auto_ingest, mode, shared_store_path, developer_name, etc.
 ├── cached_profile.md   # fast-load markdown snapshot of latest profile
@@ -477,7 +477,7 @@ across machines without hardcoding. Uses `git remote get-url origin` for
 the repo name, falls back to the directory name.
 
 **`discover_project(start_dir)`** walks up from `start_dir` looking for
-`.cognitive/manifest.json`, enabling automatic discovery from any
+`.cmm/manifest.json`, enabling automatic discovery from any
 subdirectory.
 
 ### `src/discovery/hooks.py` — Session Hooks
@@ -632,7 +632,7 @@ All approve/reject actions are logged to the `SyncLog` for audit.
 ## CLI Reference
 
 ```
-cmm init [target]             Initialize .cognitive/ folder
+cmm init [target]             Initialize .cmm/ folder
     --shared PATH             Enable shared mode, auto-pull existing memories
     --developer NAME          Your name for sync attribution
     --team-id ID              Team identifier
@@ -680,7 +680,7 @@ cmm install TARGET            Install skills to .claude/commands/
 
 ## Configuration
 
-### `.cognitive/config.json`
+### `.cmm/config.json`
 
 ```json
 {
@@ -775,7 +775,7 @@ cli.py                           (orchestrator — imports all modules)
 | `test_store.py` | ~8 | ChromaDB operations |
 | `test_mcp_server.py` | ~6 | MCP tool responses |
 | `test_watcher.py` | ~6 | Session file detection |
-| `test_discovery.py` | ~8 | .cognitive/ folder management |
+| `test_discovery.py` | ~8 | .cmm/ folder management |
 | `test_evaluation.py` | ~6 | Session analysis and logging |
 | `test_scope.py` | 11 | MemoryScope enum, serialization |
 | `test_dual_store.py` | 15 | Local + shared mode, staging ops |

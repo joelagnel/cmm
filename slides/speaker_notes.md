@@ -151,8 +151,8 @@ The onboarding flow with Chroma Cloud is:
 
 1. Set three environment variables once (add to shell profile).
 2. `cmm init . --cloud-tenant ... --cloud-database cmm --developer bob`
-3. CMM initializes the `.cognitive/` folder, connects to Chroma Cloud, and immediately pulls all approved nodes — both project-specific and team-scope.
-4. The `cached_profile.md` is written to `.cognitive/`, and the session-start hook is configured.
+3. CMM initializes the `.cmm/` folder, connects to Chroma Cloud, and immediately pulls all approved nodes — both project-specific and team-scope.
+4. The `cached_profile.md` is written to `.cmm/`, and the session-start hook is configured.
 
 From that point on, every Claude Code session starts by reading `cached_profile.md`. The agent gets the accumulated team knowledge before it writes its first line of code.
 

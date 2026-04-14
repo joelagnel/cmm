@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 from dotenv import load_dotenv
 
-# Load .env from cognitive-memory/ directory (walk up from this file)
+# Load .env from repo root (one level up from src/)
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_ENV_PATH)
 
@@ -29,7 +29,7 @@ def main():
 def init(target, store_dir, shared_path, developer, team_id, cloud_tenant, cloud_database):
     """Initialize cognitive memory for a project.
 
-    Creates the .cognitive/ folder. With --shared or --cloud-tenant/--cloud-database,
+    Creates the .cmm/ folder. With --shared or --cloud-tenant/--cloud-database,
     registers a team store and immediately runs cmm pull to populate the local
     cache from existing approved team memories.
 
@@ -54,11 +54,11 @@ def init(target, store_dir, shared_path, developer, team_id, cloud_tenant, cloud
     _cloud_mode = bool(cloud_tenant and cloud_database)
     _shared_mode = _cloud_mode or bool(shared_path)
 
-    cognitive_dir = project_dir / ".cognitive"
+    cognitive_dir = project_dir / ".cmm"
     if (cognitive_dir / "manifest.json").exists():
         proj = CognitiveProject.load(project_dir)
         console.print(f"[yellow]Already initialized:[/yellow] {proj.project_id}")
-        console.print(f"  .cognitive/ exists at {cognitive_dir}")
+        console.print(f"  .cmm/ exists at {cognitive_dir}")
         # If --shared/--cloud was passed on a re-init, still update the config
         if _shared_mode or developer or team_id:
             if shared_path:
@@ -120,10 +120,10 @@ def init(target, store_dir, shared_path, developer, team_id, cloud_tenant, cloud
         console.print(f"  Developer:   [cyan]{developer}[/cyan]")
     console.print()
     console.print("Created files:")
-    console.print(f"  .cognitive/manifest.json")
-    console.print(f"  .cognitive/config.json")
-    console.print(f"  .cognitive/llms.txt")
-    console.print(f"  .cognitive/cached_profile.md")
+    console.print(f"  .cmm/manifest.json")
+    console.print(f"  .cmm/config.json")
+    console.print(f"  .cmm/llms.txt")
+    console.print(f"  .cmm/cached_profile.md")
 
     # If shared/cloud mode, immediately pull approved nodes
     if _shared_mode:
@@ -160,7 +160,7 @@ def init(target, store_dir, shared_path, developer, team_id, cloud_tenant, cloud
     if _cloud_mode:
         console.print("[dim]Ensure CMM_CHROMA_API_KEY is set before running cmm push/pull.[/dim]")
     else:
-        console.print("[dim]Add .cognitive/ to .gitignore if you don't want it tracked.[/dim]")
+        console.print("[dim]Add .cmm/ to .gitignore if you don't want it tracked.[/dim]")
 
 
 @main.command()
@@ -199,7 +199,7 @@ def sync(target):
     """Update cached_profile.md and llms.txt from latest ChromaDB state.
 
     Reads the current cognitive profile from the store and writes it to
-    .cognitive/cached_profile.md and regenerates .cognitive/llms.txt.
+    .cmm/cached_profile.md and regenerates .cmm/llms.txt.
     """
     from pathlib import Path
     from rich.console import Console
@@ -215,7 +215,7 @@ def sync(target):
     try:
         proj = CognitiveProject.load(project_dir)
     except FileNotFoundError:
-        console.print("[red]No .cognitive/ folder found. Run 'cmm init' first.[/red]")
+        console.print("[red]No .cmm/ folder found. Run 'cmm init' first.[/red]")
         return
 
     store_path = proj.config.get(
@@ -271,7 +271,7 @@ def status(target, project):
     console = Console()
     project_dir = Path(target).resolve()
 
-    # Try to discover from .cognitive/ first
+    # Try to discover from .cmm/ first
     project_id = project
     store_path = None
 
@@ -286,7 +286,7 @@ def status(target, project):
         console.print()
     except FileNotFoundError:
         if not project_id:
-            console.print("[red]No .cognitive/ folder found and no --project given.[/red]")
+            console.print("[red]No .cmm/ folder found and no --project given.[/red]")
             console.print("Run 'cmm init' or pass --project/-p.")
             return
 
@@ -348,7 +348,7 @@ def hook():
 @hook.command("start")
 @click.argument("project_dir", default=".", type=click.Path(exists=True))
 def hook_start(project_dir):
-    """Session-start hook: load context from .cognitive/ folder."""
+    """Session-start hook: load context from .cmm/ folder."""
     from pathlib import Path
     from src.discovery.hooks import session_start_hook
 
@@ -509,7 +509,7 @@ def install(target, project, store_dir, python):
 
 def _resolve_sync_paths(target, project_id_arg):
     """Resolve (project_id, local_path, shared_path, developer, cloud_creds) from
-    .cognitive/config.json + env var overrides.
+    .cmm/config.json + env var overrides.
 
     cloud_creds is a dict with keys api_key, tenant, database when Chroma Cloud
     is configured (tenant+database present + CMM_CHROMA_API_KEY set), else None.
@@ -520,7 +520,7 @@ def _resolve_sync_paths(target, project_id_arg):
     import os, json
 
     target = Path(target).resolve()
-    cfg_path = target / ".cognitive" / "config.json"
+    cfg_path = target / ".cmm" / "config.json"
     cfg = {}
     if cfg_path.exists():
         try:

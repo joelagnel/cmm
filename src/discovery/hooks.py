@@ -1,7 +1,7 @@
 """Claude Code hooks for automatic retrieval and ingestion.
 
 Session-start hook:
-    Fires when a new Claude Code session begins. Checks for .cognitive/ folder,
+    Fires when a new Claude Code session begins. Checks for .cmm/ folder,
     loads cached profile and runs a semantic search against ChromaDB using the
     project's llms.txt content. Outputs context for the agent.
 
@@ -74,7 +74,7 @@ def _find_latest_session(project: CognitiveProject) -> Path | None:
 
 
 def session_start_hook(project_dir: Path | None = None) -> str:
-    """Session-start hook: load context from .cognitive/ folder.
+    """Session-start hook: load context from .cmm/ folder.
 
     Returns a string to be injected into the agent's context.
     Returns empty string if no cognitive memory found.
@@ -150,7 +150,7 @@ def session_stop_hook(project_dir: Path | None = None) -> dict:
     """
     project = discover_project(project_dir)
     if project is None:
-        return {"status": "skipped", "reason": "no .cognitive/ folder found"}
+        return {"status": "skipped", "reason": "no .cmm/ folder found"}
 
     if not project.config.get("auto_ingest", True):
         return {"status": "skipped", "reason": "auto_ingest disabled in config"}

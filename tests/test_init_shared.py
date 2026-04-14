@@ -38,7 +38,7 @@ def test_init_local_only(tmp_path):
     result = runner.invoke(cli, ["init", str(project_dir)])
     assert result.exit_code == 0
 
-    cfg = json.loads((project_dir / ".cognitive" / "config.json").read_text())
+    cfg = json.loads((project_dir / ".cmm" / "config.json").read_text())
     assert cfg["mode"] == "local"
     assert cfg["shared_store_path"] is None
 
@@ -58,7 +58,7 @@ def test_init_writes_developer_and_team_id(tmp_path):
     ])
     assert result.exit_code == 0
 
-    cfg = json.loads((project_dir / ".cognitive" / "config.json").read_text())
+    cfg = json.loads((project_dir / ".cmm" / "config.json").read_text())
     assert cfg["developer_name"] == "alice"
     assert cfg["team_id"] == "logistics"
 
@@ -85,7 +85,7 @@ def test_init_shared_writes_shared_path(tmp_path, fake_embed):
     ])
     assert result.exit_code == 0, result.output
 
-    cfg = json.loads((project_dir / ".cognitive" / "config.json").read_text())
+    cfg = json.loads((project_dir / ".cmm" / "config.json").read_text())
     assert cfg["mode"] == "shared"
     assert cfg["shared_store_path"] == shared_path
     assert cfg["developer_name"] == "alice"
@@ -160,7 +160,7 @@ def test_init_idempotent(tmp_path):
         "--developer", "alice",
     ])
     assert result.exit_code == 0
-    cfg = json.loads((project_dir / ".cognitive" / "config.json").read_text())
+    cfg = json.loads((project_dir / ".cmm" / "config.json").read_text())
     assert cfg["developer_name"] == "alice"
 
 

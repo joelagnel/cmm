@@ -1,6 +1,6 @@
 # Cognitive Memory
 
-At the start of every session, read `.cognitive/cached_profile.md` for 
+At the start of every session, read `.cmm/cached_profile.md` for 
 accumulated project knowledge from past sessions. This contains architectural 
 insights, known pitfalls, and diagnostic strategies distilled from prior 
 coding sessions on this project.

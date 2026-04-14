@@ -1,0 +1,28 @@
+{
+  "baseline": {
+    "total_nodes": 3,
+    "dead_ends": 0,
+    "pivots": 0,
+    "solutions": 0,
+    "hypotheses": 1,
+    "messages_to_first_solution": 0
+  },
+  "assisted": {
+    "total_nodes": 22,
+    "dead_ends": 0,
+    "pivots": 0,
+    "solutions": 7,
+    "hypotheses": 0,
+    "messages_to_first_solution": 75
+  },
+  "reductions": {
+    "dead_ends": 0.0,
+    "pivots": 0.0,
+    "messages_to_solution": 0.0,
+    "total_nodes": -633.3
+  },
+  "verdict": "no_difference",
+  "task": "Deploy this project to Railway with all endpoints working, fix any errors, and get frontend communicating with backend",
+  "project": "supply-chain",
+  "timestamp": "2026-04-11T16:58:49.551995+00:00"
+}

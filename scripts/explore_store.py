@@ -2,13 +2,13 @@
 """Explore the ChromaDB memory store -- see what's inside.
 
 Usage:
-    uv run python cognitive-memory/scripts/explore_store.py
-    uv run python cognitive-memory/scripts/explore_store.py --store-dir /path/to/store
-    uv run python cognitive-memory/scripts/explore_store.py --project mcp-gateway-registry
-    uv run python cognitive-memory/scripts/explore_store.py --node-id node-000-01
-    uv run python cognitive-memory/scripts/explore_store.py --search "debugging pydantic"
-    uv run python cognitive-memory/scripts/explore_store.py --type pivot
-    uv run python cognitive-memory/scripts/explore_store.py --limit 20
+    uv run python scripts/explore_store.py
+    uv run python scripts/explore_store.py --store-dir /path/to/store
+    uv run python scripts/explore_store.py --project mcp-gateway-registry
+    uv run python scripts/explore_store.py --node-id node-000-01
+    uv run python scripts/explore_store.py --search "debugging pydantic"
+    uv run python scripts/explore_store.py --type pivot
+    uv run python scripts/explore_store.py --limit 20
 """
 import argparse
 import json
@@ -325,19 +325,19 @@ def main():
         epilog="""
 Examples:
     # Overview of the store
-    uv run python cognitive-memory/scripts/explore_store.py
+    uv run python scripts/explore_store.py
 
     # Filter by project
-    uv run python cognitive-memory/scripts/explore_store.py --project mcp-gateway-registry
+    uv run python scripts/explore_store.py --project mcp-gateway-registry
 
     # Show only pivot nodes
-    uv run python cognitive-memory/scripts/explore_store.py --type pivot
+    uv run python scripts/explore_store.py --type pivot
 
     # Semantic search
-    uv run python cognitive-memory/scripts/explore_store.py --search "debugging pydantic"
+    uv run python scripts/explore_store.py --search "debugging pydantic"
 
     # Look up a specific node
-    uv run python cognitive-memory/scripts/explore_store.py --node-id node-000-01
+    uv run python scripts/explore_store.py --node-id node-000-01
 """,
     )
     parser.add_argument(

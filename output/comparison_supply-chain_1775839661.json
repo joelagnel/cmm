@@ -1,0 +1,28 @@
+{
+  "baseline": {
+    "total_nodes": 2,
+    "dead_ends": 0,
+    "pivots": 0,
+    "solutions": 0,
+    "hypotheses": 0,
+    "messages_to_first_solution": 0
+  },
+  "assisted": {
+    "total_nodes": 7,
+    "dead_ends": 0,
+    "pivots": 2,
+    "solutions": 0,
+    "hypotheses": 0,
+    "messages_to_first_solution": 0
+  },
+  "reductions": {
+    "dead_ends": 0.0,
+    "pivots": 0.0,
+    "messages_to_solution": 0.0,
+    "total_nodes": -250.0
+  },
+  "verdict": "no_difference",
+  "task": "A logistics company in Saudi Arabia wants to use this platform but they have three requirements: their data must stay in-region, their team coordinates primarily through WhatsApp, and their internet connectivity is unreliable at warehouse sites. What changes do we need to make to the architecture to support this client?",
+  "project": "supply-chain",
+  "timestamp": "2026-04-10T16:47:41.050357+00:00"
+}

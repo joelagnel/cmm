@@ -39,14 +39,11 @@ viz = [
 cmm = "src.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["cognitive-memory/src"]
-
-[tool.hatch.build.targets.wheel.sources]
-"cognitive-memory" = ""
+packages = ["src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["cognitive-memory/tests"]
+testpaths = ["tests"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

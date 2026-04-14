@@ -78,7 +78,7 @@ uv pip install -e ".[dev]"
 export OPENAI_API_KEY="sk-..."
 
 # Run the demo -- ingests sample sessions, builds a profile, queries it
-uv run python cognitive-memory/scripts/demo.py
+uv run python scripts/demo.py
 ```
 
 The demo ingests 10 included fixture sessions, extracts reasoning DAGs,
@@ -88,13 +88,13 @@ interactive HTML visualization -- all in one command.
 No API keys? Run parse-only mode (zero API calls):
 
 ```bash
-uv run python cognitive-memory/scripts/demo.py --parse-only
+uv run python scripts/demo.py --parse-only
 ```
 
 Clean up demo artifacts afterward:
 
 ```bash
-uv run python cognitive-memory/scripts/demo.py --clean
+uv run python scripts/demo.py --clean
 ```
 
 ## Prerequisites
@@ -127,15 +127,15 @@ cmm --help
 Copy the template and fill in your keys:
 
 ```bash
-cp cognitive-memory/.env.example cognitive-memory/.env
-# Edit cognitive-memory/.env with your actual keys
+cp .env.example .env
+# Edit .env with your actual keys
 ```
 
-The CLI auto-loads `cognitive-memory/.env` at startup via `python-dotenv`,
+The CLI auto-loads `.env` at startup via `python-dotenv`,
 so you can set all variables there instead of exporting them in your shell.
 The `.env` file is in `.gitignore` and will not be committed.
 
-See [`.env.example`](cognitive-memory/.env.example) for the full template.
+See [`.env.example`](.env.example) for the full template.
 The most common variables:
 
 ```bash
@@ -336,11 +336,11 @@ Compare two sessions or two built profiles directly:
 
 ```bash
 # Compare two profiles head-to-head (no extraction needed)
-uv run python cognitive-memory/scripts/controlled_comparison.py \
+uv run python scripts/controlled_comparison.py \
     --compare-profiles my-project-baseline my-project-assisted
 
 # Compare two session transcripts with cold-tier extraction
-uv run python cognitive-memory/scripts/controlled_comparison.py \
+uv run python scripts/controlled_comparison.py \
     --project my-project \
     --prompt "Fix the failing test" \
     --baseline-session path/to/baseline.jsonl \
@@ -348,7 +348,7 @@ uv run python cognitive-memory/scripts/controlled_comparison.py \
     --cold
 
 # Generate prompts for a fresh A/B test (dry run)
-uv run python cognitive-memory/scripts/controlled_comparison.py \
+uv run python scripts/controlled_comparison.py \
     --project my-project \
     --prompt "Fix the failing test" \
     --dry-run
@@ -357,7 +357,7 @@ uv run python cognitive-memory/scripts/controlled_comparison.py \
 ## CLI Reference
 
 ```
-cmm init [dir]                Initialize .cognitive/ folder
+cmm init [dir]                Initialize .cmm/ folder
     --cloud-tenant UUID       Enable Chroma Cloud shared mode (tenant ID)
     --cloud-database NAME     Chroma Cloud database (default: cmm)
     --shared PATH             Enable filesystem shared mode + auto-pull
@@ -396,47 +396,47 @@ Use the explorer script to inspect what's inside the ChromaDB store:
 
 ```bash
 # Overview -- collections, projects, node types, sessions, and sample nodes
-uv run python cognitive-memory/scripts/explore_store.py
+uv run python scripts/explore_store.py
 
 # Point to a specific store directory
-uv run python cognitive-memory/scripts/explore_store.py --store-dir cognitive-memory/data/memory_store
+uv run python scripts/explore_store.py --store-dir data/memory_store
 
 # Filter by project
-uv run python cognitive-memory/scripts/explore_store.py --project mcp-gateway-registry
+uv run python scripts/explore_store.py --project mcp-gateway-registry
 
 # Filter by node type (hypothesis, investigation, discovery, pivot, solution, dead_end, context_load)
-uv run python cognitive-memory/scripts/explore_store.py --type dead_end
+uv run python scripts/explore_store.py --type dead_end
 
 # Combine filters -- show only pivot nodes for a project, up to 20 results
-uv run python cognitive-memory/scripts/explore_store.py --project mcp-gateway-registry --type pivot --limit 20
+uv run python scripts/explore_store.py --project mcp-gateway-registry --type pivot --limit 20
 
 # Look up a single node by ID (shows full metadata, document, and embedding info)
-uv run python cognitive-memory/scripts/explore_store.py --node-id node-000-01
+uv run python scripts/explore_store.py --node-id node-000-01
 
 # Semantic search over stored reasoning nodes
-uv run python cognitive-memory/scripts/explore_store.py --search "debugging pydantic"
+uv run python scripts/explore_store.py --search "debugging pydantic"
 
 # Semantic search scoped to a project
-uv run python cognitive-memory/scripts/explore_store.py --search "migration failure" --project mcp-gateway-registry
+uv run python scripts/explore_store.py --search "migration failure" --project mcp-gateway-registry
 
 # Skip the overview tables, jump straight to node listing
-uv run python cognitive-memory/scripts/explore_store.py --nodes-only --limit 20
+uv run python scripts/explore_store.py --nodes-only --limit 20
 ```
 
-The default store location is `cognitive-memory/data/memory_store`. Override
+The default store location is `data/memory_store`. Override
 with `--store-dir` to point at any ChromaDB persistent directory.
 
 ## Running Tests
 
 ```bash
 # All tests (no API keys needed -- embeddings are mocked)
-uv run pytest cognitive-memory/tests/ -q
+uv run pytest tests/ -q
 
 # With coverage
-uv run pytest cognitive-memory/tests/ --cov=cognitive-memory/src/ --cov-report=term-missing
+uv run pytest tests/ --cov=src/ --cov-report=term-missing
 
 # A specific test file
-uv run pytest cognitive-memory/tests/test_token_windowing.py -v
+uv run pytest tests/test_token_windowing.py -v
 ```
 
 The test suite (193 tests) mocks all external API calls. No OpenAI or
@@ -445,40 +445,40 @@ Anthropic keys are needed to run tests.
 ## Project Structure
 
 ```
-cmm/
-├── pyproject.toml                # Project config (at repo root)
+cmm/                              # repo root
+├── pyproject.toml                # uv/hatch project config + cmm entry point
+├── uv.lock                       # locked dependency graph
+├── .env.example                  # environment variable template
 ├── README.md
 ├── LICENSE
-├── cognitive-memory/
-│   ├── src/
-│   │   ├── schemas/              # Pydantic models (session, reasoning, memory)
-│   │   ├── ingestion/            # JSONL parsing + session watcher
-│   │   ├── extraction/           # Warm (heuristic) + cold (LLM) extraction
-│   │   ├── compression/          # Semantic dedup + profile building
-│   │   ├── store/                # ChromaDB vector store (local + shared)
-│   │   ├── delivery/             # MCP server + CLI query interface
-│   │   ├── discovery/            # .cognitive/ folder + hooks + llms.txt
-│   │   ├── evaluation/           # Session analysis, interaction logging, profile quality
-│   │   ├── sync/                 # Push/pull/review for shared mode
-│   │   ├── llm_client.py         # LiteLLM wrapper (Anthropic / Amazon Bedrock)
-│   │   └── cli.py                # Click CLI entry point
-│   ├── scripts/
-│   │   ├── demo.py               # End-to-end demo (--parse-only, --clean)
-│   │   ├── ingest.py             # Batch ingestion
-│   │   ├── batch_consolidate.py  # Cold-tier consolidation
-│   │   ├── controlled_comparison.py  # A/B comparison (--cold, --compare-profiles)
-│   │   ├── explore_store.py       # ChromaDB store explorer
-│   │   ├── eval_report.py        # Evaluation dashboard
-│   │   └── visualize_dag.py      # DAG visualization generator
-│   ├── fixtures/                 # 10 sample session transcripts
-│   ├── tests/                    # 193 tests
-│   ├── ARCHITECTURE.md           # Comprehensive architecture documentation
-│   └── .env.example              # Environment variable template
+├── ARCHITECTURE.md               # comprehensive architecture documentation
+├── src/
+│   ├── schemas/                  # Pydantic models (session, reasoning, memory)
+│   ├── ingestion/                # JSONL parsing + session watcher
+│   ├── extraction/               # Warm (heuristic) + cold (LLM) extraction
+│   ├── compression/              # Semantic dedup + profile building
+│   ├── store/                    # ChromaDB vector store (local + Chroma Cloud)
+│   ├── delivery/                 # MCP server + CLI query interface
+│   ├── discovery/                # .cmm/ folder + hooks + llms.txt
+│   ├── evaluation/               # Session analysis, interaction logging, profile quality
+│   ├── sync/                     # Push/pull/review for shared mode
+│   ├── llm_client.py             # LiteLLM wrapper (Anthropic / Amazon Bedrock)
+│   └── cli.py                    # Click CLI entry point
+├── scripts/
+│   ├── demo.py                   # End-to-end demo (--parse-only, --clean)
+│   ├── ingest.py                 # Batch ingestion
+│   ├── batch_consolidate.py      # Cold-tier consolidation
+│   ├── controlled_comparison.py  # A/B comparison (--cold, --compare-profiles)
+│   ├── explore_store.py          # ChromaDB store explorer
+│   ├── eval_report.py            # Evaluation dashboard
+│   └── visualize_dag.py          # DAG visualization generator
+├── fixtures/                     # 10 sample session transcripts
+└── tests/                        # 193 tests
 ```
 
 ## Architecture
 
-See [ARCHITECTURE.md](cognitive-memory/ARCHITECTURE.md) for the full system
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system
 documentation including data flow diagrams, module dependency graph, schema
 details, and configuration reference.
 

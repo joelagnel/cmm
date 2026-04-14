@@ -1,0 +1,31 @@
+{
+  "baseline": {
+    "architectural_insights": 0,
+    "pitfalls": 0,
+    "diagnostic_strategies": 0,
+    "key_patterns": 5,
+    "anti_patterns": 5,
+    "session_count": 1
+  },
+  "assisted": {
+    "architectural_insights": 1,
+    "pitfalls": 3,
+    "diagnostic_strategies": 0,
+    "key_patterns": 5,
+    "anti_patterns": 4,
+    "session_count": 1
+  },
+  "deltas": {
+    "architectural_insights": 1,
+    "pitfalls": 3,
+    "diagnostic_strategies": 0,
+    "key_patterns": 0,
+    "anti_patterns": -1,
+    "session_count": 0
+  },
+  "verdict": "assisted_richer",
+  "baseline_project": "supply-chain-baseline",
+  "assisted_project": "supply-chain-assisted",
+  "timestamp": "2026-04-11T17:13:04.783407+00:00",
+  "mode": "profile_comparison"
+}

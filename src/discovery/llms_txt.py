@@ -20,7 +20,7 @@ def generate_llms_txt(
 ) -> str:
     """Generate llms.txt content from a cognitive profile.
 
-    Returns the full text content ready to write to .cognitive/llms.txt.
+    Returns the full text content ready to write to .cmm/llms.txt.
     """
     lines = [
         f"# {project_name}",
@@ -102,7 +102,7 @@ def generate_llms_txt(
     lines.append("")
     lines.append("- Use `/search-memory <query>` to find relevant past reasoning")
     lines.append("- Use `/diagnose <problem>` to find proven debugging strategies")
-    lines.append("- Read .cognitive/cached_profile.md for full architectural context")
+    lines.append("- Read .cmm/cached_profile.md for full architectural context")
     lines.append("- Memory covers ALL past sessions, not just the most recent one")
 
     lines.append("")
