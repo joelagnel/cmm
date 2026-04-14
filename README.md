@@ -1,14 +1,68 @@
 # Cognitive Memory Manager (CMM)
 
 Persistent reasoning memory for AI coding agents. CMM captures reasoning
-patterns from Claude Code sessions, consolidates them into durable knowledge
+patterns from coding sessions, consolidates them into durable knowledge
 (architectural insights, known pitfalls, diagnostic strategies), and
 retrieves them in future sessions -- so agents stop rediscovering the same
 things.
 
-For teams, a distributed store with human-gated approval lets developers
-share knowledge across projects without one agent's mistake becoming
-institutional false knowledge.
+## Why CMM?
+
+AI coding assistants are powerful but forgetful. Every new session starts
+from scratch -- the agent re-discovers the same codebase quirks, falls into
+the same traps, and repeats the same debugging steps that another team
+member's agent already solved last week. This is wasted time and wasted
+tokens.
+
+CMM solves this by building a **shared team memory** that learns from every
+coding session and makes that knowledge available to every future session.
+
+**The problem CMM addresses:**
+
+- **Agents repeat mistakes.** Without persistent memory, an AI assistant
+  that spent 20 minutes debugging a Pydantic v2 migration issue will hit
+  the exact same wall next session. Multiply that across a team of 10
+  developers and the waste compounds fast.
+
+- **Knowledge stays siloed.** When one developer's agent discovers that
+  "Alembic needs models registered in `__init__.py` to detect migrations,"
+  that insight dies with the session. Other team members hit the same
+  issue independently.
+
+- **Onboarding is slow.** New team members start with zero context. Their
+  AI assistant has no awareness of project conventions, known pitfalls, or
+  proven debugging strategies that the rest of the team has already
+  internalized.
+
+**What CMM does about it:**
+
+- **Captures reasoning patterns** from every coding session -- not just
+  what happened, but how the agent reasoned about it: hypotheses formed,
+  investigations performed, dead ends hit, pivots taken, solutions found.
+
+- **Builds a shared knowledge base** that improves over time. The more
+  sessions your team runs, the smarter every future session becomes. Known
+  pitfalls get surfaced before you hit them. Proven debugging strategies
+  get recommended when similar problems appear.
+
+- **Human-gated quality control.** Pushed memories go through a staging
+  area with human review before becoming team-visible. One agent's
+  hallucination doesn't become institutional false knowledge.
+
+- **AI assistant agnostic.** CMM works with any AI coding assistant that
+  produces session transcripts -- Claude Code, Cursor, Windsurf, or any
+  future tool. The memory layer is independent of the model powering your
+  assistant. Switch models or tools without losing your accumulated
+  knowledge.
+
+- **Cross-project learning.** Knowledge is classified as project-specific
+  or team-general. General insights (like "Pydantic v2 deprecated
+  `class Config`") automatically propagate across all your projects.
+
+**The result:** Your team's AI assistants get progressively better at your
+codebase. Onboarding drops from days to hours because new developers
+inherit the entire team's debugging history. Recurring pitfalls get caught
+before they waste anyone's time.
 
 ## Quickstart (2 minutes)
 
