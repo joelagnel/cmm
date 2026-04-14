@@ -1,14 +1,22 @@
-"""Consolidate reasoning nodes into a CognitiveProfile via clustering + LLM."""
+"""Consolidate reasoning nodes into a CognitiveProfile via clustering + LLM.
+
+Uses LiteLLM for provider-agnostic LLM calls (Anthropic direct or
+Amazon Bedrock).
+"""
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
-import anthropic
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
+from ..llm_client import (
+    DEFAULT_PROFILE_MODEL,
+    llm_complete,
+)
 from ..schemas.memory import (
     ArchitecturalInsight,
     CognitiveProfile,
@@ -18,7 +26,12 @@ from ..schemas.memory import (
 from ..schemas.reasoning import MemoryScope
 from ..store.vector_store import MemoryStore
 
-_MODEL = "claude-sonnet-4-6"
+# Configure logging with basicConfig
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s,p%(process)s,{%(filename)s:%(lineno)d},%(levelname)s,%(message)s",
+)
+logger = logging.getLogger(__name__)
 _MIN_CLUSTER_SIZE = 2      # clusters smaller than this are skipped
 _MAX_NODES_PER_CLUSTER = 6 # cap nodes sent to LLM per cluster
 
@@ -112,7 +125,6 @@ def _cluster_nodes(
 
 
 async def _classify_cluster(
-    client: anthropic.AsyncAnthropic,
     cluster: list[dict[str, Any]],
     session_ids: list[str],
 ) -> dict[str, Any] | None:
@@ -124,13 +136,13 @@ async def _classify_cluster(
     prompt = _CLASSIFY_PROMPT.format(fragments=fragments)
 
     try:
-        resp = await client.messages.create(
-            model=_MODEL,
-            max_tokens=512,
+        raw = await llm_complete(
             system=_CLASSIFY_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+            user_content=prompt,
+            max_tokens=512,
+            default_model=DEFAULT_PROFILE_MODEL,
         )
-        raw = resp.content[0].text.strip()
+        raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -139,11 +151,11 @@ async def _classify_cluster(
         data["source_sessions"] = list(set(session_ids))
         return data
     except Exception as e:
+        logger.error("Failed to classify cluster: %s", e)
         return None
 
 
 async def _extract_patterns(
-    client: anthropic.AsyncAnthropic,
     all_nodes: list[dict[str, Any]],
 ) -> tuple[list[str], list[str]]:
     """Extract key patterns and anti-patterns from all node summaries."""
@@ -151,13 +163,13 @@ async def _extract_patterns(
     prompt = _KEY_PATTERNS_PROMPT.format(summaries=summaries)
 
     try:
-        resp = await client.messages.create(
-            model=_MODEL,
-            max_tokens=512,
+        raw = await llm_complete(
             system=_CLASSIFY_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+            user_content=prompt,
+            max_tokens=512,
+            default_model=DEFAULT_PROFILE_MODEL,
         )
-        raw = resp.content[0].text.strip()
+        raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -171,8 +183,8 @@ async def _extract_patterns(
 class ProfileBuilder:
     """Consolidate stored reasoning nodes into a CognitiveProfile."""
 
-    def __init__(self, api_key: str | None = None):
-        self.client = anthropic.AsyncAnthropic(api_key=api_key)
+    def __init__(self):
+        pass
 
     async def build_profile(self, project_id: str, store: MemoryStore) -> CognitiveProfile:
         import asyncio
@@ -195,7 +207,6 @@ class ProfileBuilder:
         # 4. Classify each cluster concurrently
         tasks = [
             _classify_cluster(
-                self.client,
                 cluster,
                 [n.get("session_id", "") for n in cluster],
             )
@@ -205,7 +216,7 @@ class ProfileBuilder:
         classifications = await asyncio.gather(*tasks)
 
         # 5. Extract patterns from all nodes
-        key_patterns, anti_patterns = await _extract_patterns(self.client, all_nodes)
+        key_patterns, anti_patterns = await _extract_patterns(all_nodes)
 
         # 6. Assemble profile
         insights: list[ArchitecturalInsight] = []

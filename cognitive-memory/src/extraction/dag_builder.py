@@ -1,17 +1,17 @@
-"""Reasoning DAG extractor — token-budget LLM extraction.
+"""Reasoning DAG extractor -- token-budget LLM extraction.
 
-Replaces the previous fixed 5-message windowing with token-budget chunking
-based on the Anthropic SDK's count_tokens() API. Each window is filled to
-~45% of the model's context window (configurable via CMM_CONTEXT_FILL_RATIO),
-which research suggests is the safe utilization threshold before
-"lost in the middle" effects degrade extraction quality.
+Uses LiteLLM for provider-agnostic LLM calls (Anthropic direct or
+Amazon Bedrock). Each window is filled to ~45% of the model's context
+window (configurable via CMM_CONTEXT_FILL_RATIO), which research suggests
+is the safe utilization threshold before "lost in the middle" effects
+degrade extraction quality.
 
 Pipeline:
     1. Filter noise (empty messages, oversized tool dumps)
-    2. Pre-count tokens for every message (concurrent)
+    2. Pre-count tokens for every message (local, no API call)
     3. Pack messages into token-budget windows with token-based overlap
-    4. If session fits in one window → single LLM call (ideal)
-    5. Otherwise → 2-3 large windows (NOT 30 tiny ones)
+    4. If session fits in one window -> single LLM call (ideal)
+    5. Otherwise -> 2-3 large windows (NOT 30 tiny ones)
     6. Each window classification returns a LIST of nodes (not just one)
     7. LLM-inferred edges between all classified nodes
 """
@@ -19,19 +19,27 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
 
-import anthropic
-
+from ..llm_client import (
+    DEFAULT_EXTRACTION_MODEL,
+    count_tokens_for_text,
+    llm_complete,
+)
 from ..schemas.session import MessageRole, NormalizedSession, SessionMessage
 from ..schemas.reasoning import NodeType, ReasoningDAG, ReasoningEdge, ReasoningNode
 
-# ── Constants ────────────────────────────────────────────────────────────────
+# Configure logging with basicConfig
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s,p%(process)s,{%(filename)s:%(lineno)d},%(levelname)s,%(message)s",
+)
+logger = logging.getLogger(__name__)
 
-_MODEL = "claude-sonnet-4-5"  # use a model id that count_tokens supports
-_CLASSIFICATION_MODEL = "claude-sonnet-4-5"
+# ── Constants ────────────────────────────────────────────────────────────────
 
 # Context-budget tuning
 MODEL_CONTEXT_WINDOW = 200_000
@@ -178,22 +186,19 @@ class TokenWindow:
 class TokenBudgetWindower:
     """Pack session messages into windows that fit within a token budget.
 
-    Uses Anthropic's count_tokens API to measure each message exactly. Builds
-    windows greedily: keep adding messages until the next one would exceed
-    the budget, then start a new window with token-based trailing overlap.
+    Uses LiteLLM's local token counter (no API call) to measure each
+    message. Builds windows greedily: keep adding messages until the next
+    one would exceed the budget, then start a new window with token-based
+    trailing overlap.
     """
 
     def __init__(
         self,
-        client: anthropic.AsyncAnthropic,
-        model: str = _MODEL,
         fill_ratio: float | None = None,
         output_reserve: int = DEFAULT_OUTPUT_RESERVE,
         overlap_tokens: int = DEFAULT_OVERLAP_TOKENS,
         prompt_overhead_tokens: int = 0,
     ):
-        self.client = client
-        self.model = model
         self.fill_ratio = fill_ratio if fill_ratio is not None else _resolve_fill_ratio()
         self.output_reserve = output_reserve
         self.overlap_tokens = overlap_tokens
@@ -207,25 +212,13 @@ class TokenBudgetWindower:
         b -= self.prompt_overhead_tokens
         return max(MIN_WINDOW_TOKENS, b)
 
-    async def count_tokens(self, text: str) -> int:
-        """Count tokens for a single piece of text via Anthropic SDK."""
-        try:
-            resp = await self.client.messages.count_tokens(
-                model=self.model,
-                messages=[{"role": "user", "content": text}],
-            )
-            return int(resp.input_tokens)
-        except Exception:
-            # Fallback: rough estimate of 4 chars per token
-            return max(1, len(text) // 4)
-
-    async def count_messages(
-        self, items: list[tuple[int, SessionMessage]]
+    def count_messages(
+        self,
+        items: list[tuple[int, SessionMessage]],
     ) -> list[int]:
-        """Concurrently count tokens for every message."""
+        """Count tokens for every message using local token counter."""
         formatted = [_format_message(m, idx) for idx, m in items]
-        tasks = [self.count_tokens(t) for t in formatted]
-        return await asyncio.gather(*tasks)
+        return [count_tokens_for_text(t) for t in formatted]
 
     def pack(
         self,
@@ -314,7 +307,6 @@ def _resolve_fill_ratio() -> float:
 # ── LLM classification ──────────────────────────────────────────────────────
 
 async def _classify_window(
-    client: anthropic.AsyncAnthropic,
     window_idx: int,
     window: TokenWindow,
 ) -> list[ReasoningNode]:
@@ -329,19 +321,24 @@ async def _classify_window(
     )
 
     try:
-        response = await client.messages.create(
-            model=_CLASSIFICATION_MODEL,
-            max_tokens=DEFAULT_OUTPUT_RESERVE,
+        raw = await llm_complete(
             system=_CLASSIFICATION_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+            user_content=prompt,
+            max_tokens=DEFAULT_OUTPUT_RESERVE,
+            default_model=DEFAULT_EXTRACTION_MODEL,
         )
-        raw = response.content[0].text.strip()
+        raw = raw.strip()
+        logger.info(
+            "Window %d: LLM returned %d chars, first 200: %s",
+            window_idx, len(raw), raw[:200],
+        )
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
                 raw = raw[4:]
         data: dict[str, Any] = json.loads(raw)
         node_dicts = data.get("nodes", [])
+        logger.info("Window %d: parsed %d nodes from LLM response", window_idx, len(node_dicts))
 
         nodes: list[ReasoningNode] = []
         for i, nd in enumerate(node_dicts):
@@ -366,11 +363,12 @@ async def _classify_window(
                     message_range=(msg_start, msg_end),
                     confidence=float(nd.get("confidence", 0.5)),
                 ))
-            except Exception:
+            except Exception as node_err:
+                logger.warning("Window %d node %d: parse error: %s", window_idx, i, node_err)
                 continue
 
         if not nodes:
-            # LLM returned empty list — emit a fallback so the window isn't lost
+            logger.warning("Window %d: LLM returned data but 0 nodes parsed", window_idx)
             nodes.append(ReasoningNode(
                 node_id=f"node-{window_idx:03d}-00",
                 node_type=NodeType.CONTEXT_LOAD,
@@ -382,6 +380,7 @@ async def _classify_window(
         return nodes
 
     except Exception as e:
+        logger.error("Window %d: extraction failed: %s: %s", window_idx, type(e).__name__, e)
         return [ReasoningNode(
             node_id=f"node-{window_idx:03d}-00",
             node_type=NodeType.CONTEXT_LOAD,
@@ -393,7 +392,7 @@ async def _classify_window(
 
 
 async def _build_edges(
-    client: anthropic.AsyncAnthropic, nodes: list[ReasoningNode]
+    nodes: list[ReasoningNode],
 ) -> list[ReasoningEdge]:
     """Ask the LLM to identify edges between classified nodes."""
     if len(nodes) < 2:
@@ -413,13 +412,13 @@ async def _build_edges(
     prompt = _EDGE_PROMPT.format(nodes_json=nodes_json)
 
     try:
-        response = await client.messages.create(
-            model=_CLASSIFICATION_MODEL,
-            max_tokens=1024,
+        raw = await llm_complete(
             system=_EDGE_SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+            user_content=prompt,
+            max_tokens=1024,
+            default_model=DEFAULT_EXTRACTION_MODEL,
         )
-        raw = response.content[0].text.strip()
+        raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -456,25 +455,19 @@ class DAGBuilder:
 
     def __init__(
         self,
-        api_key: str | None = None,
         fill_ratio: float | None = None,
         overlap_tokens: int = DEFAULT_OVERLAP_TOKENS,
         output_reserve: int = DEFAULT_OUTPUT_RESERVE,
-        model: str = _MODEL,
     ):
-        self.client = anthropic.AsyncAnthropic(api_key=api_key)
-        self.model = model
         self.fill_ratio = fill_ratio if fill_ratio is not None else _resolve_fill_ratio()
         self.overlap_tokens = overlap_tokens
         self.output_reserve = output_reserve
 
-        # Approximate prompt overhead — the classification prompt template is
+        # Approximate prompt overhead -- the classification prompt template is
         # roughly ~600 tokens of fixed scaffolding around the segment.
         self._prompt_overhead = 600
 
         self.windower = TokenBudgetWindower(
-            client=self.client,
-            model=self.model,
             fill_ratio=self.fill_ratio,
             output_reserve=self.output_reserve,
             overlap_tokens=self.overlap_tokens,
@@ -496,15 +489,15 @@ class DAGBuilder:
                 noise_ratio=1.0 if original_count > 0 else 0.0,
             )
 
-        # Step 2: Pre-count tokens for every message (concurrent)
-        token_counts = await self.windower.count_messages(filtered)
+        # Step 2: Pre-count tokens for every message (local, no API call)
+        token_counts = self.windower.count_messages(filtered)
 
         # Step 3: Pack into token-budget windows
         windows = self.windower.pack(filtered, token_counts)
 
-        # Step 4: Classify each window concurrently — each may return MULTIPLE nodes
+        # Step 4: Classify each window concurrently -- each may return MULTIPLE nodes
         tasks = [
-            _classify_window(self.client, idx, window)
+            _classify_window(idx, window)
             for idx, window in enumerate(windows)
         ]
         nodes_per_window = await asyncio.gather(*tasks)
@@ -514,7 +507,7 @@ class DAGBuilder:
         nodes = self._dedupe_overlapping_nodes(nodes_per_window)
 
         # Step 5: Build edges across all classified nodes
-        edges = await _build_edges(self.client, nodes)
+        edges = await _build_edges(nodes)
 
         # Step 6: Detect pivots
         pivots = _detect_pivots(nodes, edges)

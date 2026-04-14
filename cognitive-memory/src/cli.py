@@ -1,5 +1,12 @@
 """cmm — cognitive memory CLI entry point."""
+from pathlib import Path
+
 import click
+from dotenv import load_dotenv
+
+# Load .env from cognitive-memory/ directory (walk up from this file)
+_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_ENV_PATH)
 
 
 @click.group()

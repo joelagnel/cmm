@@ -116,16 +116,20 @@ async def main():
         return
 
     # Step 2: Extract DAG
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        console.print("\n[yellow]ANTHROPIC_API_KEY not set — skipping LLM extraction.[/yellow]")
-        console.print("Set ANTHROPIC_API_KEY to run full DAG extraction.")
+    has_llm_credentials = bool(
+        os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("AWS_ACCESS_KEY_ID")
+        or os.environ.get("AWS_PROFILE")
+    )
+    if not has_llm_credentials:
+        console.print("\n[yellow]No LLM credentials set -- skipping LLM extraction.[/yellow]")
+        console.print("Set ANTHROPIC_API_KEY or AWS credentials to run full DAG extraction.")
         return
 
     console.rule("[bold]Step 2: Extracting reasoning DAG")
     console.print(f"Processing {len(session.messages)} messages in overlapping windows...")
 
-    builder = DAGBuilder(api_key=api_key)
+    builder = DAGBuilder()
     dag = await builder.build(session)
     print_dag_summary(dag)
 

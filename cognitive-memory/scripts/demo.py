@@ -186,9 +186,13 @@ def run_demo(parse_only: bool = False, output_dir: Path = _DEMO_OUTPUT, store_di
                   f"merged [yellow]{merged_total}[/yellow], "
                   f"dropped [dim]{dropped_total}[/dim]\n")
 
-    # ── Phase 4: Build profile (if Anthropic key available) ─────────
-    has_anthropic = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    if has_anthropic:
+    # ── Phase 4: Build profile (if LLM credentials available) ───────
+    has_llm = bool(
+        os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("AWS_ACCESS_KEY_ID")
+        or os.environ.get("AWS_PROFILE")
+    )
+    if has_llm:
         console.rule("[bold]Phase 4: Build cognitive profile")
         from src.compression.profile_builder import ProfileBuilder
 

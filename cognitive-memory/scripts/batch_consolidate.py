@@ -80,7 +80,6 @@ def _find_session_files(watcher_state_path: Path) -> dict[str, list[Path]]:
 async def upgrade_warm_nodes(
     store: MemoryStore,
     project_id: str,
-    api_key: str,
 ) -> dict:
     """Re-extract warm-tier nodes using full LLM extraction."""
     from src.ingestion import ClaudeCodeParser
@@ -119,7 +118,7 @@ async def upgrade_warm_nodes(
                         parser = ClaudeCodeParser()
                         session = parser.parse_file(jsonl_file)
 
-                        builder = DAGBuilder(api_key=api_key)
+                        builder = DAGBuilder()
                         dag = await builder.build(session)
 
                         dedup = SemanticDeduplicator(store)
@@ -144,13 +143,13 @@ async def upgrade_warm_nodes(
     return {"upgraded": upgraded, "skipped": skipped}
 
 
-async def rebuild_profile(store: MemoryStore, project_id: str, api_key: str) -> dict:
+async def rebuild_profile(store: MemoryStore, project_id: str) -> dict:
     """Rebuild the cognitive profile for a project."""
     node_count = store.node_count(project_id)
     if node_count == 0:
         return {"status": "empty", "node_count": 0}
 
-    builder = ProfileBuilder(api_key=api_key)
+    builder = ProfileBuilder()
     profile = await builder.build_profile(project_id, store)
 
     return {
@@ -166,7 +165,7 @@ async def rebuild_profile(store: MemoryStore, project_id: str, api_key: str) -> 
 async def consolidate_project(
     store: MemoryStore,
     project_id: str,
-    api_key: str | None,
+    has_llm: bool,
     upgrade: bool = False,
     profiles_only: bool = False,
     dry_run: bool = False,
@@ -184,21 +183,21 @@ async def consolidate_project(
         result["action"] = "dry_run"
         return result
 
-    # Step 2: Upgrade warm nodes if requested and API key available
-    if upgrade and api_key and not profiles_only:
+    # Step 2: Upgrade warm nodes if requested and LLM credentials available
+    if upgrade and has_llm and not profiles_only:
         console.print(f"\n[bold]Upgrading warm-tier nodes for {project_id}...[/bold]")
-        upgrade_result = await upgrade_warm_nodes(store, project_id, api_key)
+        upgrade_result = await upgrade_warm_nodes(store, project_id)
         result["upgrade"] = upgrade_result
-    elif upgrade and not api_key:
-        console.print("[yellow]  ANTHROPIC_API_KEY not set — skipping warm-tier upgrade[/yellow]")
+    elif upgrade and not has_llm:
+        console.print("[yellow]  No LLM credentials set -- skipping warm-tier upgrade[/yellow]")
 
     # Step 3: Rebuild profile
-    if api_key:
+    if has_llm:
         console.print(f"[bold]Rebuilding cognitive profile for {project_id}...[/bold]")
-        profile_result = await rebuild_profile(store, project_id, api_key)
+        profile_result = await rebuild_profile(store, project_id)
         result["profile"] = profile_result
     else:
-        console.print("[yellow]  ANTHROPIC_API_KEY not set — skipping profile rebuild[/yellow]")
+        console.print("[yellow]  No LLM credentials set -- skipping profile rebuild[/yellow]")
 
     return result
 
@@ -222,7 +221,11 @@ async def main():
         parser.print_help()
         sys.exit(1)
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    has_llm_credentials = bool(
+        os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("AWS_ACCESS_KEY_ID")
+        or os.environ.get("AWS_PROFILE")
+    )
     store = MemoryStore(persist_dir=args.store_dir)
 
     # Determine which projects to process
@@ -248,7 +251,7 @@ async def main():
         result = await consolidate_project(
             store=store,
             project_id=project_id,
-            api_key=api_key,
+            has_llm=has_llm_credentials,
             upgrade=args.upgrade,
             profiles_only=args.profiles_only,
             dry_run=args.dry_run,

@@ -11,3 +11,5 @@ cognitive-memory/data/demo_store/
 cognitive-memory/data/eval/
 cognitive-memory/data/sync/
 .cognitive/
+.scratchpad/
+.venv/

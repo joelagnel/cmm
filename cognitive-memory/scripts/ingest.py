@@ -87,13 +87,12 @@ async def ingest_session(
     project_id: str,
     store: MemoryStore,
     use_llm: bool,
-    api_key: str | None,
 ) -> dict:
     cc_parser = ClaudeCodeParser()
     session = cc_parser.parse_file(path)
 
-    if use_llm and api_key:
-        builder = DAGBuilder(api_key=api_key)
+    if use_llm:
+        builder = DAGBuilder()
         dag = await builder.build(session)
         method = "LLM"
     else:
@@ -167,8 +166,13 @@ async def main():
     parser.add_argument("--status", action="store_true", help="Show current store status and exit")
     args = parser.parse_args()
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    use_llm = not args.no_llm and bool(api_key)
+    # LLM is available if any supported provider credentials are set
+    has_llm_credentials = bool(
+        os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("AWS_ACCESS_KEY_ID")
+        or os.environ.get("AWS_PROFILE")
+    )
+    use_llm = not args.no_llm and has_llm_credentials
 
     store = MemoryStore(persist_dir=args.store_dir)
 
@@ -200,7 +204,7 @@ async def main():
 
         console.print(f"Ingesting [cyan]{path.name}[/cyan]...", end=" ")
         try:
-            stats = await ingest_session(path, args.project, store, use_llm, api_key)
+            stats = await ingest_session(path, args.project, store, use_llm)
             console.print(f"[green]done[/green] ({stats['stored']} stored)")
             table.add_row(
                 path.name,
@@ -220,11 +224,11 @@ async def main():
     console.print(f"\nTotal nodes in store: [bold]{store.node_count(args.project)}[/bold]")
 
     if args.build_profile:
-        if not api_key:
-            console.print("\n[yellow]ANTHROPIC_API_KEY not set — cannot build profile.[/yellow]")
+        if not has_llm_credentials:
+            console.print("\n[yellow]No LLM credentials set -- cannot build profile.[/yellow]")
         else:
             console.rule("[bold]Building cognitive profile")
-            pb = ProfileBuilder(api_key=api_key)
+            pb = ProfileBuilder()
             profile = await pb.build_profile(args.project, store)
             console.print(f"[green]Profile built:[/green]")
             console.print(f"  {len(profile.architectural_insights)} insights")
